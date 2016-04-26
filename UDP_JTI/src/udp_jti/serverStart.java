@@ -53,7 +53,7 @@ class serverStart implements Runnable {
         socket = s; // port that we send from  
         receivePacket = new DatagramPacket(receiveD, receiveD.length); //receive packet objekt  
 
-    }
+    } 
 
     @Override
     public void run() {
