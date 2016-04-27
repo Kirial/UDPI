@@ -45,7 +45,7 @@ class serverStart implements Runnable {
      * 
     */
     public serverStart(DatagramSocket s, UDPII t, InetAddress i, String data) {
-        
+        packet = new ArrayList<>();
         packet.add(data); // add Data type
         receiveD = new byte[512]; // maxsize to be received 
         sendD = new byte[512]; // maxsize to be send 
@@ -86,8 +86,8 @@ class serverStart implements Runnable {
                         }
 
                         if (index == antal) {
-                            missing = getMissing();
-                            do {
+                            missing = getMissing(); // get number of packet missíng 
+                            do { 
 
                                 int ok = missing - 1;
                                 String thisAk = "AK" + ok + "Next" + missing;
@@ -113,6 +113,8 @@ class serverStart implements Runnable {
             }
 
         }
+        
+        target.myCode(packet);
     }
     /**
      * Get Data separated. Header from original Message.  

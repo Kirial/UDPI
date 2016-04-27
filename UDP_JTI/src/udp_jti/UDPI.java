@@ -1,6 +1,5 @@
 package udp_jti;
 
-
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
@@ -17,7 +16,6 @@ import java.util.logging.Logger;
  * @author Family
  */
 public class UDPI {
-
     private byte[] receiveD;
     private byte[] send;
     private String connection;
@@ -49,6 +47,47 @@ public class UDPI {
         }
     }
 
+    public UDPI() throws Exception {
+        try {
+            socket = new DatagramSocket();
+        } catch (SocketException ex) {
+            System.out.println(Arrays.toString(ex.getStackTrace()));
+            throw new Exception("Error");
+        }
+    }
+
+    public void send(int portnr, String adr, String data, String dataType) {
+        int newPort;
+        String connect = "Transmission.";
+        connect = connect + dataType;
+        
+        byte[] dataB = connect.getBytes();
+        try {
+            InetAddress address = InetAddress.getByName(adr);
+            DatagramPacket conOK = new DatagramPacket(dataB, dataB.length, address, portnr);
+            try {
+                socket.send(conOK);
+                byte[] tempData = new byte[60];
+                DatagramPacket receivePacket = new DatagramPacket(tempData, tempData.length);
+                socket.receive(receivePacket);
+                String con = new String(receivePacket.getData()); 
+                String newPortS = con.substring(con.indexOf('.'),con.length());
+                newPort = Integer.parseInt(newPortS);
+                
+                // skal skrives lidt kode 
+                
+                
+            } catch (IOException ex) {
+                System.out.println(Arrays.toString(ex.getStackTrace()));
+            }
+            
+            
+
+        } catch (UnknownHostException ex) {
+            System.out.println("Invalid IP Adress");
+        }
+    }
+
     public void listen() {
 
         try {
@@ -62,15 +101,15 @@ public class UDPI {
                 DatagramSocket newSocket;
                 int newPort = PORT_NR + 1;
                 while (true) {
-               
+
                     try {
                         newSocket = new DatagramSocket(newPort);
                         InetAddress IPAddress = receiveP.getAddress();
                         int port = receiveP.getPort();
-                        String Response = "ConOK" + newPort;
+                        String Response = "ConOK." + newPort;
                         byte[] sendData = Response.getBytes();
                         DatagramPacket conOK = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-                        new Thread(new serverStart(newSocket, target, IPAddress,dataType)).start();
+                        new Thread(new serverStart(newSocket, target, IPAddress, dataType)).start();
                         break;
                     } catch (IOException e) {
                         System.out.println(e.getMessage());
