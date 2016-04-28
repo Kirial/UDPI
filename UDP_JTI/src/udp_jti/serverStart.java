@@ -1,6 +1,5 @@
 package udp_jti;
 
-
 import java.net.*;
 import java.util.*;
 
@@ -14,16 +13,14 @@ import java.util.*;
  * To secure integrity of the data
  */
 class serverStart implements Runnable {
-    
+
     private ArrayList<String> packet; // ArrayList Of String that well be returned to the caller
-    
-    
-    private DatagramSocket socket; 
-    private byte[] receiveD;
-    private byte[] sendD;
-    private String message;
-    private UDPII target;
-    
+    private DatagramSocket socket; // socket that is send to and from 
+    private byte[] receiveD; // data from sender 
+    private byte[] sendD; // data to send 
+    private String message; // temp message 
+    private UDPII target; // who calls the function so we can send message back
+
     private DatagramPacket receivePacket;
     private String antalS;
     private int antal;
@@ -36,14 +33,14 @@ class serverStart implements Runnable {
     private int missing;
     private InetAddress sender;
     private int port;
-    
+    private int countSession = 0;
+
     /**
-     * Constructor takes as the input datagram socet 
-     * Target where it will return message
-     * ip addres of the one who created connection
-     * Data type that is to send 
-     * 
-    */
+     * Constructor takes as the input datagram socet Target where it will return
+     * message ip addres of the one who created connection Data type that is to
+     * send
+     *
+     */
     public serverStart(DatagramSocket s, UDPII t, InetAddress i, String data) {
         packet = new ArrayList<>();
         packet.add(data); // add Data type
@@ -52,72 +49,84 @@ class serverStart implements Runnable {
         target = t; // target of the caller
         socket = s; // port that we send from  
         receivePacket = new DatagramPacket(receiveD, receiveD.length); //receive packet objekt  
-
-    } 
+    }
 
     @Override
     public void run() {
-        
         continueSession = true; // the continue Session will stop after all packets are received.  
         missing = 101; // this means no packets are missing 
-        
-        while (continueSession) {
 
+        while (continueSession) {
             firstPacket = true; // wait for the first packet is received. 
+
             try {
-                socket.receive(receivePacket); // get first Packet
-                if (receivePacket.getAddress().equals(sender)) { // check ip of the sender 
+                //If the first message never arives the connection is closed after 1 second. 
+                try {
+                    socket.setSoTimeout(1000);// sets time out to one second. 
+                    socket.receive(receivePacket); // get first Packet
+                } catch (SocketTimeoutException timeout) {
+                    socket.close(); // timeout socet closes.
+                    System.out.println(Arrays.toString(timeout.getStackTrace()));
+                    return;
+                }
+
+                if (receivePacket.getAddress().equals(sender)) { // check ip of the sender ignore rest
                     message = new String(receivePacket.getData()); // get message (string)                     
                     getData();// separate data 
-                    if (!(modtaget[index])) {
-                        packet.add(index, message);
-                        modtaget[index] = true;
-                    }
+                    marck(); // add to list after
                     modtaget = getField(antal); // creates a array of boollean variables 
                     firstPacket = false;
                     boolean allRes = false;
                     while (!allRes) {
-                        socket.receive(receivePacket); // receive data  
-                        message = new String(receivePacket.getData()); 
-                        getData(); // sepparate data 
-                        if (!(modtaget[index])) { // if the index 
-                            packet.add(index, message); // if packet is already saved dont save it again. 
-                            modtaget[index] = true;
-                        }
+                        try {
+                            socket.setSoTimeout(20 * antal);
+                            socket.receive(receivePacket); // receive data  
+                            if (receivePacket.getAddress().equals(sender)) {
+                                message = new String(receivePacket.getData());
+                                getData(); // sepparate data 
+                                marck();
+                            }
+                        } catch (SocketTimeoutException timeout) {
 
+                        }
                         if (index == antal) {
                             missing = getMissing(); // get number of packet missíng 
-                            do { 
+                            do {
 
                                 int ok = missing - 1;
                                 String thisAk = "AK" + ok + "Next" + missing;
                                 byte[] sendData = thisAk.getBytes();
                                 DatagramPacket AK = new DatagramPacket(sendData, sendData.length, sender, port);
+                                try {
+                                    socket.setSoTimeout(20);
+                                    socket.receive(receivePacket);
+                                    if (receivePacket.getAddress().equals(sender)) {
+                                        message = new String(receivePacket.getData());
+                                        getData();
+                                        marck();
+                                    }
+                                } catch (SocketTimeoutException timeout) {
 
-                                socket.receive(receivePacket);
-                                message = new String(receivePacket.getData());
-                                getData();
-                                if (!(modtaget[index])) {
-                                    packet.add(index, message);
-                                    modtaget[index] = true;
                                 }
 
                                 missing = getMissing();
                             } while (missing != 101);
                         }
+
                     }
                 }
                 target.myCode(packet);
             } catch (Exception ex) {
                 System.out.print(Arrays.toString(ex.getStackTrace()));
             }
-
+            countSession++;
         }
-        
+        connectData();
         target.myCode(packet);
     }
+
     /**
-     * Get Data separated. Header from original Message.  
+     * Get Data separated. Header from original Message.
      */
     private void getData() {
         message = message.replace("HEAD*A", "");
@@ -141,9 +150,10 @@ class serverStart implements Runnable {
     }
 
     /**
-     * Creates array of antal elements and sets them to false. 
+     * Creates array of antal elements and sets them to false.
+     *
      * @param antal
-     * @return t 
+     * @return t
      */
     private boolean[] getField(int antal) {
         boolean[] t = new boolean[antal];
@@ -153,6 +163,11 @@ class serverStart implements Runnable {
         return t;
     }
 
+    /**
+     * get missing packet
+     *
+     * @return
+     */
     private int getMissing() {
         for (int i = 1; i <= antal; i++) {
             if (!(modtaget[i])) {
@@ -161,5 +176,30 @@ class serverStart implements Runnable {
         }
         return 101;
 
+    }
+
+    /**
+     * add data to message.
+     */
+    private void marck() {
+        if (!(modtaget[(index + (100 * countSession))])) {
+            packet.add((index + (100 * countSession)), message);
+            modtaget[(index)] = true;
+
+        }
+    }
+    /**
+     * returns arrayList with datatype and data.
+     */
+    private void connectData(){
+        String S= ""; 
+        int packAm = packet.size();
+        for(int i = 1; i<packAm; i++){
+            S = S + packet.get(i);
+        }
+        String type = packet.get(0);
+        packet.clear();
+        packet.add(type);
+        packet.add(S);
     }
 }

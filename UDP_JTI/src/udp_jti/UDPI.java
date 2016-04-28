@@ -26,6 +26,16 @@ public class UDPI {
     private UDPII target;
     private String dataType;
 
+    /**
+     * This constructor creates a port that will listen to the port
+     * <p>
+     * this port is only used to create sessions, all further communications will 
+     * <p> 
+     * go through the next port. 
+     * @param yourCode  
+     * @param p
+     * @throws Exception 
+     */
     public UDPI(UDPII yourCode, int p) throws Exception {
         PORT_NR = p;
         if (PORT_NR < 49152 && PORT_NR > 65535) {
