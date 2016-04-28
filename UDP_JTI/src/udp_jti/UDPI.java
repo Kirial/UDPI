@@ -98,9 +98,9 @@ public class UDPI {
                 newPort = Integer.parseInt(newPortS);
                 Scanner keyboard = new Scanner(System.in);
                 inData = keyboard.nextLine();
-                ArrayList<String> toBeSent = new ArrayList<String>();
                 buffer();
                 sendOrder();
+                waitAck();
 
             } catch (IOException ex) {
                 System.out.println(Arrays.toString(ex.getStackTrace()));
@@ -166,17 +166,21 @@ public class UDPI {
         int runde = 0;
         for (int i = 0; i < 100; i++) {
 
-            sendData = toBeSent.get(i+runde);
+            sendData = toBeSent.get(i + runde);
             sendDataBytes = sendData.getBytes();
             DatagramPacket sendPacket = new DatagramPacket(sendDataBytes, sendDataBytes.length, InetAddress.getByName(adr), portnr);
             clientSocket.send(sendPacket);
             if (i == 99) {
-                runde = runde +100;
+                runde = runde + 100;
             }
         }
-        socket.setSoTimeout(20);
+    }
 
+    private void waitAck() {
+        try {
+            clientSocket.setSoTimeout(20);
+        } catch (SocketException ex) {
+            Logger.getLogger(UDPI.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
-
-
