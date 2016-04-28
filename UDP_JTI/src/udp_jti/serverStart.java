@@ -41,11 +41,11 @@ class serverStart implements Runnable {
      * send
      *
      */
-    public serverStart(DatagramSocket s, UDPII t, InetAddress i, String data) throws Exception {
+    public serverStart(DatagramSocket s, UDPII t, InetAddress i, String data,int dataSize) throws Exception {
         packet = new ArrayList<>();
         packet.add(data); // add Data type
-        receiveD = new byte[512]; // maxsize to be received 
-        sendD = new byte[512]; // maxsize to be send 
+        receiveD = new byte[dataSize]; // maxsize to be received 
+        sendD = new byte[dataSize]; // maxsize to be send 
         target = t; // target of the caller
         socket = s; // port that we send from  
         receivePacket = new DatagramPacket(receiveD, receiveD.length); //receive packet objekt  

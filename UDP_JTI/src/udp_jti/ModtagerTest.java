@@ -5,16 +5,15 @@
  */
 package udp_jti;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+
 
 /**
  *
  * @author taras
  */
-public class UDP_JTI {
+public class ModtagerTest{
 
     /**
      * @param args the command line arguments
@@ -25,13 +24,13 @@ public class UDP_JTI {
 
             @Override
             public void myCode(ArrayList<String> m) {
-               System.out.println("type: "+m.get(0)+" string: "+m.get(1));
+               System.out.println("type: "+m.get(0)+" string: "+m.get(1)); // get message and then print it
             }
 
         };
         
         try {
-            UDPI nySocket = new UDPI(target,4500);
+            UDPI nySocket = new UDPI(target,50000);
             while(true){
             nySocket.listen();
             }

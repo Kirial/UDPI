@@ -4,9 +4,6 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.Scanner;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -19,28 +16,23 @@ import java.util.Scanner;
  */
 public class UDPI {
 
+    final private int mSize = 512;
     private byte[] receiveD;
     private byte[] send;
     private String connection;
     private int PORT_NR;
-    //private String IP;
     private DatagramSocket socket = null;
-    private String thisMessage;
     private UDPII target;
     private String dataType;
-    private static String inData;
-    private ArrayList<String> toBeSent;
+    private ArrayList<String> toBeSend;
     private DatagramSocket clientSocket;
-    private String sendData;
     private byte[] sendDataBytes;
     InetAddress IP;
     int portnr;
     String adr;
     private boolean listen;
-
-    private ArrayList<String> missingPackets;
-    int runde = 0;
-
+    private int runde;
+    private boolean nextBurst;
 
     /**
      * This constructor creates a port that will listen to the port
@@ -56,12 +48,8 @@ public class UDPI {
      */
     public UDPI(UDPII yourCode, int p) throws Exception {
         PORT_NR = p;
-        receiveD = new byte[512];
-        send = new byte[512];
-        if (PORT_NR < 49152 || PORT_NR > 65535) {
-            PORT_NR = 49152;
-            System.out.println("portError i'll try using port " + PORT_NR);
-        }
+        receiveD = new byte[mSize];
+        send = new byte[mSize];
         target = yourCode;
 
         while (true) {
@@ -80,8 +68,9 @@ public class UDPI {
     }
 
     public UDPI() throws Exception {
-        receiveD = new byte[512];
-        send = new byte[512];
+        nextBurst = false;
+        receiveD = new byte[mSize];
+        send = new byte[mSize];
         try {
             socket = new DatagramSocket();
         } catch (SocketException ex) {
@@ -90,33 +79,39 @@ public class UDPI {
         }
     }
 
-    public void send(int portnr, String adr) { // , String data, String dataType
-        int newPort;
+    public void send(int portnr, String adr, String m) { // , String data, String dataType
+        int newPort = 0;
         String connect = "Transmission.";
         connect = connect + dataType;
 
-        byte[] dataB = connect.getBytes();
+        send = connect.getBytes();
         try {
             InetAddress address = InetAddress.getByName(adr);
-            DatagramPacket conOK = new DatagramPacket(dataB, dataB.length, address, portnr);
+            DatagramPacket conOK = new DatagramPacket(send, send.length, address, portnr);
             try {
-                socket.send(conOK);
-                byte[] tempData = new byte[60];
-                DatagramPacket receivePacket = new DatagramPacket(tempData, tempData.length);
-                socket.receive(receivePacket);
-                String con = new String(receivePacket.getData());
-                String newPortS = con.substring(con.indexOf('.'), con.length());
-                newPort = Integer.parseInt(newPortS);
-                Scanner keyboard = new Scanner(System.in);
-                inData = keyboard.nextLine();
+                int countTry = 20;
+                while (countTry < 300) {
+                    socket.send(conOK);
+                    try {
+                        DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
+                        socket.setSoTimeout(20);
+                        socket.receive(receivePacket);
 
-                ArrayList<String> toBeSent = new ArrayList<String>();
-                buffer();
-                sendOrder();
-
-                buffer();
-                sendBurst();
-                waitAck();
+                        String con = new String(receivePacket.getData());
+                        String newPortS = con.substring(con.indexOf('.'), con.length());
+                        newPort = Integer.parseInt(newPortS);
+                    } catch (SocketTimeoutException e) {
+                        countTry = countTry + 40;
+                    }
+                }
+                runde = 0;
+                toBeSend = new ArrayList<>();
+                buffer(m);
+                int rounds = toBeSend.size()/100+1;
+                while (runde < rounds) {
+                    sendBurst(newPort, address);
+                    waitAck(newPort, address);
+                }
 
             } catch (IOException ex) {
                 System.out.println(Arrays.toString(ex.getStackTrace()));
@@ -152,7 +147,7 @@ public class UDPI {
                                 DatagramPacket conOK = new DatagramPacket(send, send.length, IPAddress, port);
                                 socket.send(conOK);
                                 try {
-                                    new Thread(new serverStart(newSocket, target, IPAddress, dataType)).start();
+                                    new Thread(new serverStart(newSocket, target, IPAddress, dataType,mSize)).start();
                                 } catch (Exception ex) {
                                 }
                                 break;
@@ -179,57 +174,48 @@ public class UDPI {
     }
 
     /**
-     * This method will devide the inData into chunks of 512 bytes
-     */
-
-    private void sendOrder() throws UnknownHostException, IOException {
-        int runde = 0;
-        for (int i = 0; i < 100; i++) {
-
-            sendData = toBeSent.get(i+runde);
-            sendDataBytes = sendData.getBytes();
-            DatagramPacket sendPacket = new DatagramPacket(sendDataBytes, sendDataBytes.length, InetAddress.getByName(adr), portnr);
-            clientSocket.send(sendPacket);
-            if (i == 99) {
-                runde = runde +100;
-            }
-        }
-        socket.setSoTimeout(20);
-    }
-    /**
      * This method will divide the inData into chunks of 512 bytes
      */
-    private void buffer(){
-        while (inData.length() > 487) {
-            toBeSent.add(inData.substring(0, 486));
-            inData = inData.substring(487);
+    private void buffer(String m) {
+        while (m.length() > 487) {
+            toBeSend.add(m.substring(0, 486));
+            m = m.substring(487);
         }
-        toBeSent.add(inData);
+        toBeSend.add(m);
     }
 
-    private void sendBurst() throws UnknownHostException, IOException {
+    private void sendBurst(int port, InetAddress thisAdr) {
         int count = 0;
-        while (count < 100 && count + runde < toBeSent.size()) {
-            int antal = inData.length() % 487;
-            int flere = toBeSent.size() - (runde);
+        while (count < 100 && toBeSend.size() > (runde * 100 + count)) {
+            int flere = toBeSend.size() - (runde * 100);
 
-            int S = 1;
+            int S;
             if (flere > 0) {
                 S = 1;
             } else {
                 S = 0;
             }
-
-            int nummer = 0;
+            int antal = toBeSend.size() - (runde * 100);
+            if (antal >= 100) {
+                antal = 100;
+            }
+            int nummer = count + 1;
             String header = ("HEAD*A" + antal + "#" + nummer + "S" + S + "*HEAD");
-            String data = toBeSent.get(count + runde);
+            String data = toBeSend.get(count + (runde * 100));
             String headerMedData = header + data;
-            nummer++;
-            sendData = headerMedData;
-            sendDataBytes = sendData.getBytes();
-            DatagramPacket sendPacket = new DatagramPacket(sendDataBytes, sendDataBytes.length, InetAddress.getByName(adr), portnr);
-            clientSocket.send(sendPacket);
+            sendDataBytes = headerMedData.getBytes();
+            DatagramPacket sendPacket;
+            try {
+                sendPacket = new DatagramPacket(sendDataBytes, sendDataBytes.length, thisAdr, port);
+                socket.send(sendPacket);
+            } catch (Exception ex) {
+                System.out.println(Arrays.toString(ex.getStackTrace()));
+            }
             count++;
+            if (count == 100) {
+                count = 0;
+                runde++;
+            }
         }
     }
 
@@ -241,53 +227,48 @@ public class UDPI {
      * @throws UnknownHostException
      * @throws IOException
      */
-    private void sendSingle(int missing) throws UnknownHostException, IOException {
+    private void sendSingle(int missing,int newPort,InetAddress address) {
 
-        sendData = toBeSent.get(missing);
-        sendDataBytes = sendData.getBytes();
-        DatagramPacket sendPacket = new DatagramPacket(sendDataBytes, sendDataBytes.length, InetAddress.getByName(adr), portnr);
-        clientSocket.send(sendPacket);
-        waitAck();
+        sendDataBytes = toBeSend.get(missing+runde*100).getBytes();
+        try {
+            DatagramPacket sendPacket = new DatagramPacket(sendDataBytes, sendDataBytes.length,address ,newPort );
+            socket.send(sendPacket);
+        } catch (IOException ex) {
+            System.out.println(Arrays.toString(ex.getStackTrace()));
+        }
+        waitAck(newPort, address);
     }
 
-    private void waitAck() {
+    private void waitAck(int newPort, InetAddress address) {
+        while (!nextBurst) {
+            DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
+            try {
+                clientSocket.setSoTimeout(20);
+                clientSocket.receive(receivePacket);
+                String Ack = new String(receivePacket.getData());
+                ProcessAck(Ack,newPort, address);
+                clientSocket.close();
 
-        DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
-        try {
-            clientSocket.setSoTimeout(20);
-            clientSocket.receive(receivePacket);
-            String Ack = new String(receivePacket.getData());
-            ProcessAck(Ack);
-            clientSocket.close();
+            } catch (SocketTimeoutException timeout) {
 
-        } catch (SocketTimeoutException timeout) {
-
-        } catch (IOException ex) {
-            Logger.getLogger(UDPI.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                sendSingle(100 * runde + 100,newPort, address);
+            }
         }
     }
 
-    private void ProcessAck(String Ack) {
-
-        String modtagetOK = Ack.substring(Ack.indexOf('K') + 1, Ack.indexOf('N'));
+    private void ProcessAck(String Ack,int newPort, InetAddress address) {
+        int missing = 0;
         String missingstring = Ack.substring(Ack.indexOf('t'));
-        int missing = Integer.parseInt(missingstring);
-
-        if (missing == 99) {
-            runde = runde + 100;
-            try {
-                sendBurst();
-            } catch (IOException ex) {
-                Logger.getLogger(UDPI.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        try {
+            missing = Integer.parseInt(missingstring);
+        } catch (Exception ex) {
+            System.out.println(Arrays.toString(ex.getStackTrace()));
+        }
+        if (missing == 101) {
+            runde++;
         } else {
-            try {
-                sendSingle(missing);
-            } catch (IOException ex) {
-                Logger.getLogger(UDPI.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            sendSingle(missing, newPort, address);
         }
     }
 }
-
-
