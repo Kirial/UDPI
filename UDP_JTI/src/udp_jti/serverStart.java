@@ -182,7 +182,7 @@ class serverStart implements Runnable {
      * add data to message.
      */
     private void marck() {
-        if (!(modtaget[(index + (100 * countSession))])) {
+        if (!(modtaget[index])) {
             packet.add((index + (100 * countSession)), message);
             modtaget[(index)] = true;
 
