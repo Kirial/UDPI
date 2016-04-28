@@ -38,10 +38,13 @@ public class UDPI {
      */
     public UDPI(UDPII yourCode, int p) throws Exception {
         PORT_NR = p;
-        if (PORT_NR < 49152 && PORT_NR > 65535) {
+        receiveD = new byte[512];
+        send = new byte[512];
+        if (PORT_NR < 49152 || PORT_NR > 65535) {
             PORT_NR = 49152;
         }
         target = yourCode;
+        
         while (true) {
             try {
                 socket = new DatagramSocket(PORT_NR);
@@ -58,6 +61,8 @@ public class UDPI {
     }
 
     public UDPI() throws Exception {
+        receiveD = new byte[512];
+        send = new byte[512];
         try {
             socket = new DatagramSocket();
         } catch (SocketException ex) {
