@@ -5,6 +5,7 @@
  */
 package udp_jti;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
