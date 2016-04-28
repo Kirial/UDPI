@@ -31,18 +31,23 @@ public class UDPI {
     private static String inData;
     private ArrayList<String> toBeSent;
     private DatagramSocket clientSocket;
-    private byte[] sendData;
+    private String sendData;
+    private byte[] sendDataBytes;
     InetAddress IP;
+    int portnr;
+    String adr;
 
     /**
      * This constructor creates a port that will listen to the port
      * <p>
-     * this port is only used to create sessions, all further communications will 
-     * <p> 
-     * go through the next port. 
-     * @param yourCode  
+     * this port is only used to create sessions, all further communications
+     * will
+     * <p>
+     * go through the next port.
+     *
+     * @param yourCode
      * @param p
-     * @throws Exception 
+     * @throws Exception
      */
     public UDPI(UDPII yourCode, int p) throws Exception {
         PORT_NR = p;
@@ -74,7 +79,7 @@ public class UDPI {
         }
     }
 
-    public void send(int portnr, String adr, String data, String dataType) {
+    public void send(int portnr, String adr) { // , String data, String dataType
         int newPort;
         String connect = "Transmission.";
         connect = connect + dataType;
@@ -93,11 +98,9 @@ public class UDPI {
                 newPort = Integer.parseInt(newPortS);
                 Scanner keyboard = new Scanner(System.in);
                 inData = keyboard.nextLine();
-                System.out.println("enter IP Address");
-                IP = keyboard.nextLine();
                 ArrayList<String> toBeSent = new ArrayList<String>();
                 buffer();
-                
+                sendOrder();
 
             } catch (IOException ex) {
                 System.out.println(Arrays.toString(ex.getStackTrace()));
@@ -148,22 +151,32 @@ public class UDPI {
 
     }
 
+    /**
+     * This method will devide the inData into chunks of 512 bytes
+     */
     private void buffer() {
-                    while (inData.length() > 512) {
-                toBeSent.add(inData.substring(0, 511));
-                inData = inData.substring(512);
-            }
-            toBeSent.add(inData);
+        while (inData.length() > 512) {
+            toBeSent.add(inData.substring(0, 511));
+            inData = inData.substring(512);
         }
-       
-    private void Sending() throws IOException {
-        for (String temp : toBeSent){
-         sendData = temp.getBytes();
-            
-            DatagramPacket sendPacket =  new DatagramPacket(sendData, sendData.length, IP, 9876);
-          clientSocket.send(sendPacket);
-            
-        } 
+        toBeSent.add(inData);
     }
+
+    private void sendOrder() throws UnknownHostException, IOException {
+        int runde = 0;
+        for (int i = 0; i < 100; i++) {
+
+            sendData = toBeSent.get(i+runde);
+            sendDataBytes = sendData.getBytes();
+            DatagramPacket sendPacket = new DatagramPacket(sendDataBytes, sendDataBytes.length, InetAddress.getByName(adr), portnr);
+            clientSocket.send(sendPacket);
+            if (i == 99) {
+                runde = runde +100;
+            }
+        }
+        socket.setSoTimeout(20);
+
     }
+}
+
 

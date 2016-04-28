@@ -5,6 +5,8 @@
  */
 package udp_jti;
 
+import java.net.InetAddress;
+
 /**
  *
  * @author taras
@@ -16,7 +18,6 @@ public class UDP_JTI {
      */
     public static void main(String[] args) {
 
-        
     }
     
 }
