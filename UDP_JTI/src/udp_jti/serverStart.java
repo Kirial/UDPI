@@ -97,6 +97,7 @@ class serverStart implements Runnable {
                                 String thisAk = "AK" + ok + "Next" + missing;
                                 byte[] sendData = thisAk.getBytes();
                                 DatagramPacket AK = new DatagramPacket(sendData, sendData.length, sender, port);
+                                socket.send(AK);
                                 try {
                                     socket.setSoTimeout(20);
                                     socket.receive(receivePacket);
