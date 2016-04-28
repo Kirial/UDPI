@@ -154,7 +154,7 @@ public class UDPI {
     }
 
     /**
-     * This method will divide the inData into chunks of 512 bytes
+     * Metoden deler dataene op i bidder på 487 bytes
      */
     private void buffer() {
         while (inData.length() > 487) {
@@ -168,8 +168,8 @@ public class UDPI {
         int count = 0;
         while (count < 100 && count + runde < toBeSent.size()) {
             int antal = inData.length() % 487;
-            int flere = toBeSent.size() - (runde);
 
+            int flere = toBeSent.size() - (runde);
             int S = 1;
             if (flere > 0) {
                 S = 1;
@@ -211,7 +211,7 @@ public class UDPI {
 
         DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
         try {
-            clientSocket.setSoTimeout(20);
+            clientSocket.setSoTimeout(1000);
             clientSocket.receive(receivePacket);
             String Ack = new String(receivePacket.getData());
             ProcessAck(Ack);
@@ -219,11 +219,17 @@ public class UDPI {
 
         } catch (SocketTimeoutException timeout) {
 
+            
         } catch (IOException ex) {
             Logger.getLogger(UDPI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
+    /**
+     * Metoden bestemmer om den næste burst kan sendes 
+     * eller om der skal sendes pakker enkeltvis
+     * @param Ack 
+     */
     private void ProcessAck(String Ack) {
 
         String modtagetOK = Ack.substring(Ack.indexOf('K') + 1, Ack.indexOf('N'));
