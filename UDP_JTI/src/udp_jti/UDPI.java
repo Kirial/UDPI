@@ -243,7 +243,7 @@ public class UDPI {
             S = 1;
         }
         int mis = (missing - 1);
-        String header = "HEAD*A" + mis + "#" + toBeSend.get(runde).size()+"S" + S + "*HEAD";
+        String header = "HEAD*A" + toBeSend.get(runde).size() + "#" + mis+"S" + S + "*HEAD";
         send = (header+toBeSend.get(runde).get(missing - 1)).getBytes();
         try {
 

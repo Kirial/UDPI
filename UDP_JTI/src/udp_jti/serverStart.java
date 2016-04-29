@@ -50,11 +50,12 @@ class serverStart implements Runnable {
         socket = s; // port that we send from  
         sender = i;
         receivePacket = new DatagramPacket(receiveD, receiveD.length); //receive packet objekt  
+        continueSession = true; // the continue Session will stop after all packets are received. 
     }
 
     @Override
     public void run() {
-        continueSession = true; // the continue Session will stop after all packets are received.  
+
         missing = 101; // this means no packets are missing 
 
         while (continueSession) {
@@ -99,19 +100,21 @@ class serverStart implements Runnable {
                             do {
                                 missing = getMissing(); // get number of packet missíng 
                                 int ok = missing - 1;
-                                String thisAk = "AK" + ok + "Next" + missing+"*";
-                                byte[] sendData = thisAk.getBytes();
-                                DatagramPacket AK = new DatagramPacket(sendData, sendData.length, sender, port);
+                                String thisAk = "AK" + ok + "Next" + missing + "*";
+                                sendD = thisAk.getBytes();
+                                DatagramPacket AK = new DatagramPacket(sendD, sendD.length, sender, port);
                                 socket.send(AK);
-                                try {
-                                    socket.setSoTimeout(200);
-                                    socket.receive(receivePacket);
-                                    if (receivePacket.getAddress().equals(sender)) {
-                                        message = new String(receivePacket.getData());
-                                        getData();
-                                        marck(SessionsString);
+                                if (missing != 101) {
+                                    try {
+                                        socket.setSoTimeout(200);
+                                        socket.receive(receivePacket);
+                                        if (receivePacket.getAddress().equals(sender)) {
+                                            message = new String(receivePacket.getData());
+                                            getData();
+                                            marck(SessionsString);
+                                        }
+                                    } catch (SocketTimeoutException timeout) {
                                     }
-                                } catch (SocketTimeoutException timeout) {
                                 }
 
                             } while (missing != 101);
