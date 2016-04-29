@@ -142,7 +142,6 @@ class serverStart implements Runnable {
         antalS = message.substring(0, message.indexOf('#'));
         indexS = message.substring(message.indexOf('#') + 1, message.indexOf("S"));
         sessionStatus = message.substring(message.indexOf('S') + 1, message.indexOf("*"));
-        System.out.println(message);
         if (sessionStatus.equals("1") && firstPacket == true) {
             continueSession = true;
         } else {

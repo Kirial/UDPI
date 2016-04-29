@@ -78,7 +78,6 @@ public class UDPI {
 
     public void send(int portnr, String adr, String m) {
         int newPort = 0;
-        runde = 0;
         toBeSend = new ArrayList<>();
         buffer(m);
         String connect = "Transmission";
@@ -237,7 +236,6 @@ public class UDPI {
      * @throws IOException
      */
     private void sendSingle(int missing, int newPort, InetAddress address) {
-
         send = toBeSend.get(runde).get(missing-1).getBytes();
         try {
             DatagramPacket sendPacket = new DatagramPacket(send, send.length, address, newPort);
@@ -258,7 +256,7 @@ public class UDPI {
             ProcessAck(Ack, newPort, address);
 
         } catch (SocketTimeoutException timeout) {
-            sendSingle(100, newPort, address);
+            sendSingle(toBeSend.get(runde).size(), newPort, address);
         } catch (IOException ex) {
 
         }
@@ -273,7 +271,7 @@ public class UDPI {
         } catch (Exception ex) {
             System.out.println(Arrays.toString(ex.getStackTrace()));
         }
-        if (missing == 101) {
+        if (missing == toBeSend.get(runde).size()) {
             return;
         } else {
             sendSingle(missing, newPort, address);
