@@ -16,14 +16,14 @@ import java.util.Arrays;
  */
 public class UDPI {
 
-    final private int mSize = 512;
+    final private int mSize = 50;
     private byte[] receiveD;
     private byte[] send;
     private String connection;
     private int PORT_NR;
     private DatagramSocket socket = null;
     private UDPII target;
-    private ArrayList<String> toBeSend;
+    private ArrayList<ArrayList<String>> toBeSend;
     InetAddress IP;
     int portnr;
     String adr;
@@ -78,6 +78,9 @@ public class UDPI {
 
     public void send(int portnr, String adr, String m) {
         int newPort = 0;
+        runde = 0;
+        toBeSend = new ArrayList<>();
+        buffer(m);
         String connect = "Transmission";
         send = connect.getBytes();
         try {
@@ -94,12 +97,15 @@ public class UDPI {
                         String con = new String(receivePacket.getData());
                         System.out.println(con);
                         if (con.substring(0, con.indexOf('.')).equals("ConOK")) {
-                            String newPortS = con.substring(con.indexOf('.'), con.indexOf('*'));
+                            String newPortS = con.substring(con.indexOf('.') + 1, con.indexOf('*'));
                             newPort = Integer.parseInt(newPortS);
+                            System.out.println(newPort);
+
                         } else {
                             System.out.println("ERROR Connection");
                             return;
                         }
+                        break;
                     } catch (SocketTimeoutException e) {
                         countTry = countTry + 40;
                         System.out.println("timeout");
@@ -109,13 +115,13 @@ public class UDPI {
                     System.out.println("Timeout Error Host Not Responding");
                     return;
                 }
+
                 runde = 0;
-                toBeSend = new ArrayList<>();
-                buffer(m);
-                int rounds = toBeSend.size() / 101 + 1;
-                while (runde < rounds) {
+                for (ArrayList<String> s : toBeSend) {
                     sendBurst(newPort, address);
+                    runde++;
                 }
+                socket.close();
 
             } catch (IOException ex) {
                 System.out.println(Arrays.toString(ex.getStackTrace()));
@@ -142,7 +148,7 @@ public class UDPI {
                         InetAddress IPAddress = receiveP.getAddress();
                         int port = receiveP.getPort();
 
-                        String Response = "ConOK." + newPort+"*";
+                        String Response = "ConOK." + newPort + "*";
                         send = Response.getBytes();
                         DatagramPacket conOK = new DatagramPacket(send, send.length, IPAddress, port);
                         socket.send(conOK);
@@ -178,32 +184,34 @@ public class UDPI {
      * This method will divide the inData into chunks of 512 bytes
      */
     private void buffer(String m) {
-        while (m.length() > 487) {
-            toBeSend.add(m.substring(0, 486));
-            m = m.substring(487);
+        int count = 1;
+        ArrayList<String> tempArray = new ArrayList<>();
+        while (m.length() > (mSize - 20)) {
+            tempArray.add(m.substring(0, (mSize - 20 - 1)));
+            m = m.substring((mSize - 20));
+            if (count == 100) {
+                toBeSend.add(tempArray);
+                tempArray.clear();
+            }
+            count++;
+
         }
-        toBeSend.add(m);
+        toBeSend.add(tempArray);
     }
 
     private void sendBurst(int port, InetAddress thisAdr) {
-        int count = 0;
-        while (count < 100 && toBeSend.size() > (runde * 100 + count)) {
-            int flere = toBeSend.size() - (runde * 100);
+        ArrayList<String> tempArray = toBeSend.get(runde);
 
+        for (int i = 1; i < tempArray.size(); i++) {
             int S;
-            if (flere > 0) {
-                S = 1;
-            } else {
+            if ((runde + 1) == toBeSend.size()) {
                 S = 0;
+            } else {
+                S = 1;
             }
-            int antal = toBeSend.size() - (runde * 100);
-            if (antal >= 100) {
-                antal = 100;
-            }
-            int nummer = count + 1;
-            String header = ("HEAD*A" + antal + "#" + nummer + "S" + S + "*HEAD");
-            String data = toBeSend.get(count + (runde * 100));
-            String headerMedData = header + data;
+
+            String header = ("HEAD*A" + i + "#" + tempArray.size() + "S" + S + "*HEAD");
+            String headerMedData = header + tempArray.get(i);
             send = headerMedData.getBytes();
             DatagramPacket sendPacket;
             try {
@@ -212,13 +220,11 @@ public class UDPI {
             } catch (Exception ex) {
                 System.out.println(Arrays.toString(ex.getStackTrace()));
             }
-            count++;
-            if (count == 100) {
-                count = 0;
-                waitAck(port, thisAdr);
-                runde++;
-            }
+
         }
+
+        waitAck(port, thisAdr);
+
     }
 
     /**
@@ -231,7 +237,7 @@ public class UDPI {
      */
     private void sendSingle(int missing, int newPort, InetAddress address) {
 
-        send = toBeSend.get((missing + runde * 100)).getBytes();
+        send = toBeSend.get(runde).get(missing).getBytes();
         try {
             DatagramPacket sendPacket = new DatagramPacket(send, send.length, address, newPort);
             socket.send(sendPacket);
@@ -242,7 +248,7 @@ public class UDPI {
     }
 
     private void waitAck(int newPort, InetAddress address) {
-        nextBurst = false;
+        nextBurst= false;
         while (!nextBurst) {
             DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
             try {
@@ -250,10 +256,9 @@ public class UDPI {
                 socket.receive(receivePacket);
                 String Ack = new String(receivePacket.getData());
                 ProcessAck(Ack, newPort, address);
-                socket.close();
 
             } catch (SocketTimeoutException timeout) {
-                sendSingle(100 * runde + 100, newPort, address);
+                sendSingle(100, newPort, address);
             } catch (IOException ex) {
 
             }

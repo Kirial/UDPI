@@ -34,6 +34,7 @@ class serverStart implements Runnable {
     private InetAddress sender;
     private int port;
     private int countSession = 0;
+    boolean allRes;
 
     /**
      * Constructor takes as the input datagram socet Target where it will return
@@ -47,12 +48,12 @@ class serverStart implements Runnable {
         sendD = new byte[dataSize]; // maxsize to be send 
         target = t; // target of the caller
         socket = s; // port that we send from  
+        sender = i;
         receivePacket = new DatagramPacket(receiveD, receiveD.length); //receive packet objekt  
     }
 
     @Override
     public void run() {
-        System.out.println("Con OK");
         continueSession = true; // the continue Session will stop after all packets are received.  
         missing = 101; // this means no packets are missing 
 
@@ -61,21 +62,26 @@ class serverStart implements Runnable {
             try {
                 //If the first message never arives the connection is closed after 1 second. 
                 try {
-                    socket.setSoTimeout(1000);// sets time out to one second. 
+                    socket.setSoTimeout(5000);// sets time out to one second. 
                     socket.receive(receivePacket); // get first Packet
                 } catch (SocketTimeoutException timeout) {
                     socket.close(); // timeout socet closes.
-                    System.out.println(Arrays.toString(timeout.getStackTrace()));
+                    System.out.println("ERROR" + Arrays.toString(timeout.getStackTrace()));
                     return;
                 }
-
                 if (receivePacket.getAddress().equals(sender)) { // check ip of the sender ignore rest
-                    message = new String(receivePacket.getData()); // get message (string)                     
+
+                    message = new String(receivePacket.getData()); // get message (string)
+                    allRes = false;
                     getData();// separate data 
-                    modtaget = getField(antal); // creates a array of boollean variables 
-                    marck(); // add to list after
+                    String[] SessionsString = new String[antal + 1];
+                    modtaget = getField(antal + 1); // creates a array of boollean variables 
+                    marck(SessionsString); // add to list after
+                    if (antal == index && sessionStatus.equals("0")) {
+                        allRes = true;
+                        continueSession = false;
+                    }
                     firstPacket = false;
-                    boolean allRes = false;
                     while (!allRes) {
                         try {
                             socket.setSoTimeout(50 * (antal - index));
@@ -83,7 +89,7 @@ class serverStart implements Runnable {
                             if (receivePacket.getAddress().equals(sender)) {
                                 message = new String(receivePacket.getData());
                                 getData(); // sepparate data 
-                                marck();
+                                marck(SessionsString);
                             }
                         } catch (SocketTimeoutException timeout) {
                             index = antal;
@@ -103,7 +109,7 @@ class serverStart implements Runnable {
                                     if (receivePacket.getAddress().equals(sender)) {
                                         message = new String(receivePacket.getData());
                                         getData();
-                                        marck();
+                                        marck(SessionsString);
                                     }
                                 } catch (SocketTimeoutException timeout) {
                                 }
@@ -112,6 +118,12 @@ class serverStart implements Runnable {
                         }
 
                     }
+                    String temps = "";
+                    for (int i = 1; i < SessionsString.length; i++) {
+                        temps = temps + SessionsString[i];
+                    }
+                    packet.add(temps);
+
                 }
             } catch (Exception ex) {
                 System.out.print(Arrays.toString(ex.getStackTrace()));
@@ -130,6 +142,7 @@ class serverStart implements Runnable {
         antalS = message.substring(0, message.indexOf('#'));
         indexS = message.substring(message.indexOf('#') + 1, message.indexOf("S"));
         sessionStatus = message.substring(message.indexOf('S') + 1, message.indexOf("*"));
+        System.out.println(message);
         if (sessionStatus.equals("1") && firstPacket == true) {
             continueSession = true;
         } else {
@@ -144,6 +157,7 @@ class serverStart implements Runnable {
         } catch (Exception numbers) {
             System.out.println(numbers.getMessage());
         }
+
     }
 
     /**
@@ -154,7 +168,7 @@ class serverStart implements Runnable {
      */
     private boolean[] getField(int antal) {
         boolean[] t = new boolean[antal];
-        for (int i = 1; i <= antal; i++) {
+        for (int i = 1; i < antal; i++) {
             t[i] = false;
         }
         return t;
@@ -178,9 +192,9 @@ class serverStart implements Runnable {
     /**
      * add data to message.
      */
-    private void marck() {
+    private void marck(String[] s) {
         if (!(modtaget[index])) {
-            packet.add((index + (100 * countSession)), message);
+            s[index] = message;
             modtaget[(index)] = true;
 
         }
@@ -191,10 +205,11 @@ class serverStart implements Runnable {
      */
     private String connectData() {
         String S = "";
-        
-        for(String s: packet){
-            S=S+s;
+
+        for (String s : packet) {
+            S = S + s;
         }
         return S;
     }
+
 }
