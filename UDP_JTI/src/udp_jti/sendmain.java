@@ -20,7 +20,7 @@ public class sendmain {
             Scanner keyboard = new Scanner(System.in);
             String inData = keyboard.nextLine();
             UDPI socket = new UDPI();
-            String IP = "Skriv IP";
+            String IP = "127.0.0.1";
             int Port = 5000;
             socket.send(Port, IP,inData);
         } catch (Exception ex) {

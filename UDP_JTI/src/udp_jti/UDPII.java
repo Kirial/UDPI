@@ -15,5 +15,5 @@ import java.util.ArrayList;
  */
 public interface UDPII {
     
-    public abstract void myCode(ArrayList<String> m);
+    public abstract void myCode(String m);
 }

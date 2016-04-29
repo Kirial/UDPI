@@ -41,9 +41,8 @@ class serverStart implements Runnable {
      * send
      *
      */
-    public serverStart(DatagramSocket s, UDPII t, InetAddress i, String data,int dataSize) throws Exception {
+    public serverStart(DatagramSocket s, UDPII t, InetAddress i, int dataSize) throws Exception {
         packet = new ArrayList<>();
-        packet.add(data); // add Data type
         receiveD = new byte[dataSize]; // maxsize to be received 
         sendD = new byte[dataSize]; // maxsize to be send 
         target = t; // target of the caller
@@ -53,12 +52,12 @@ class serverStart implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("Con OK");
         continueSession = true; // the continue Session will stop after all packets are received.  
         missing = 101; // this means no packets are missing 
 
         while (continueSession) {
             firstPacket = true; // wait for the first packet is received. 
-
             try {
                 //If the first message never arives the connection is closed after 1 second. 
                 try {
@@ -73,13 +72,13 @@ class serverStart implements Runnable {
                 if (receivePacket.getAddress().equals(sender)) { // check ip of the sender ignore rest
                     message = new String(receivePacket.getData()); // get message (string)                     
                     getData();// separate data 
-                    marck(); // add to list after
                     modtaget = getField(antal); // creates a array of boollean variables 
+                    marck(); // add to list after
                     firstPacket = false;
                     boolean allRes = false;
                     while (!allRes) {
                         try {
-                            socket.setSoTimeout(20 * antal);
+                            socket.setSoTimeout(50 * (antal - index));
                             socket.receive(receivePacket); // receive data  
                             if (receivePacket.getAddress().equals(sender)) {
                                 message = new String(receivePacket.getData());
@@ -87,19 +86,19 @@ class serverStart implements Runnable {
                                 marck();
                             }
                         } catch (SocketTimeoutException timeout) {
-
+                            index = antal;
                         }
                         if (index == antal) {
-                            missing = getMissing(); // get number of packet missíng 
-                            do {
 
+                            do {
+                                missing = getMissing(); // get number of packet missíng 
                                 int ok = missing - 1;
                                 String thisAk = "AK" + ok + "Next" + missing;
                                 byte[] sendData = thisAk.getBytes();
                                 DatagramPacket AK = new DatagramPacket(sendData, sendData.length, sender, port);
                                 socket.send(AK);
                                 try {
-                                    socket.setSoTimeout(20);
+                                    socket.setSoTimeout(200);
                                     socket.receive(receivePacket);
                                     if (receivePacket.getAddress().equals(sender)) {
                                         message = new String(receivePacket.getData());
@@ -107,23 +106,20 @@ class serverStart implements Runnable {
                                         marck();
                                     }
                                 } catch (SocketTimeoutException timeout) {
-
                                 }
 
-                                missing = getMissing();
                             } while (missing != 101);
                         }
 
                     }
                 }
-                target.myCode(packet);
             } catch (Exception ex) {
                 System.out.print(Arrays.toString(ex.getStackTrace()));
             }
             countSession++;
         }
-        connectData();
-        target.myCode(packet);
+
+        target.myCode(connectData());
     }
 
     /**
@@ -189,18 +185,16 @@ class serverStart implements Runnable {
 
         }
     }
+
     /**
      * returns arrayList with datatype and data.
      */
-    private void connectData(){
-        String S= ""; 
-        int packAm = packet.size();
-        for(int i = 1; i<packAm; i++){
-            S = S + packet.get(i);
+    private String connectData() {
+        String S = "";
+        
+        for(String s: packet){
+            S=S+s;
         }
-        String type = packet.get(0);
-        packet.clear();
-        packet.add(type);
-        packet.add(S);
+        return S;
     }
 }

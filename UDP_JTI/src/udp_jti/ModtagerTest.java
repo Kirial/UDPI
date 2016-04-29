@@ -23,8 +23,8 @@ public class ModtagerTest{
         UDPII target = new UDPII(){
 
             @Override
-            public void myCode(ArrayList<String> m) {
-               System.out.println("type: "+m.get(0)+" string: "+m.get(1)); // get message and then print it
+            public void myCode(String m) {
+               System.out.println("modtaget: "+ m); // get message and then print it
             }
 
         };
