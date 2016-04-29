@@ -95,7 +95,7 @@ public class UDPI {
                         socket.setSoTimeout(countTry);
                         socket.receive(receivePacket);
                         String con = new String(receivePacket.getData());
-                        
+
                         System.out.println(con);
                         if (con.substring(0, con.indexOf('.')).equals("ConOK")) {
                             String newPortS = con.substring(con.indexOf('.') + 1, con.indexOf('*'));
@@ -238,7 +238,7 @@ public class UDPI {
      */
     private void sendSingle(int missing, int newPort, InetAddress address) {
 
-        send = toBeSend.get(runde).get(missing).getBytes();
+        send = toBeSend.get(runde).get(missing-1).getBytes();
         try {
             DatagramPacket sendPacket = new DatagramPacket(send, send.length, address, newPort);
             socket.send(sendPacket);
@@ -249,21 +249,20 @@ public class UDPI {
     }
 
     private void waitAck(int newPort, InetAddress address) {
-        nextBurst= false;
-        while (!nextBurst) {
-            DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
-            try {
-                socket.setSoTimeout(200);
-                socket.receive(receivePacket);
-                String Ack = new String(receivePacket.getData());
-                ProcessAck(Ack, newPort, address);
 
-            } catch (SocketTimeoutException timeout) {
-                sendSingle(100, newPort, address);
-            } catch (IOException ex) {
+        DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
+        try {
+            socket.setSoTimeout(200);
+            socket.receive(receivePacket);
+            String Ack = new String(receivePacket.getData());
+            ProcessAck(Ack, newPort, address);
 
-            }
+        } catch (SocketTimeoutException timeout) {
+            sendSingle(100, newPort, address);
+        } catch (IOException ex) {
+
         }
+
     }
 
     private void ProcessAck(String Ack, int newPort, InetAddress address) {
@@ -275,8 +274,7 @@ public class UDPI {
             System.out.println(Arrays.toString(ex.getStackTrace()));
         }
         if (missing == 101) {
-            runde++;
-            nextBurst = true;
+            return;
         } else {
             sendSingle(missing, newPort, address);
         }
