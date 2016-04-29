@@ -16,7 +16,7 @@ import java.util.Arrays;
  */
 public class UDPI {
 
-    final private int mSize = 512;
+    final private int mSize = 50;
     private byte[] receiveD;
     private byte[] send;
     private String connection;
@@ -92,14 +92,18 @@ public class UDPI {
                         socket.setSoTimeout(countTry);
                         socket.receive(receivePacket);
                         String con = new String(receivePacket.getData());
+                        
                         System.out.println(con);
                         if (con.substring(0, con.indexOf('.')).equals("ConOK")) {
-                            String newPortS = con.substring(con.indexOf('.'), con.length());
+                            String newPortS = con.substring(con.indexOf('.')+1, con.indexOf('*'));
+                            System.out.println(newPortS);
                             newPort = Integer.parseInt(newPortS);
+                        System.out.println("New Port");
                         } else {
                             System.out.println("ERROR Connection");
                             return;
                         }
+                        break;
                     } catch (SocketTimeoutException e) {
                         countTry = countTry + 40;
                         System.out.println("timeout");
@@ -190,7 +194,7 @@ public class UDPI {
     private void sendBurst(int port, InetAddress thisAdr) {
         int count = 0;
         while (count < 100 && toBeSend.size() > (runde * 100 + count)) {
-            int flere = toBeSend.size() - (runde * 100);
+            int flere = toBeSend.size()/100 - (runde * 100);
 
             int S;
             if (flere > 0) {
