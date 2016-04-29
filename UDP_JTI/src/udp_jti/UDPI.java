@@ -95,6 +95,7 @@ public class UDPI {
                         socket.setSoTimeout(countTry);
                         socket.receive(receivePacket);
                         String con = new String(receivePacket.getData());
+                        
                         System.out.println(con);
                         if (con.substring(0, con.indexOf('.')).equals("ConOK")) {
                             String newPortS = con.substring(con.indexOf('.') + 1, con.indexOf('*'));
