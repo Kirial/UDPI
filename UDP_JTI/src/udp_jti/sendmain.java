@@ -8,7 +8,6 @@ package udp_jti;
 import java.util.Arrays;
 import java.util.Scanner;
 
-
 /**
  *
  * @author taras
@@ -16,15 +15,19 @@ import java.util.Scanner;
 public class sendmain {
 
     public static void main(String[] args) {
-        try {
+        while (true) {
             Scanner keyboard = new Scanner(System.in);
-            String inData = keyboard.nextLine();
-            UDPI socket = new UDPI();
-            String IP = "127.0.0.1";
-            int Port = 5000;
-            socket.send(Port, IP,inData);
-        } catch (Exception ex) {
-            System.out.println(Arrays.toString(ex.getStackTrace()));
+                String IP = "127.0.0.1";
+                int Port = 50000;
+            try {
+
+                String inData = keyboard.nextLine();
+                System.out.println("Sendeing");
+                UDPI socket = new UDPI();
+                socket.send(Port, IP, inData);
+            } catch (Exception ex) {
+                System.out.println(Arrays.toString(ex.getStackTrace()));
+            }
         }
     }
 }

@@ -78,21 +78,21 @@ public class UDPI {
 
     public void send(int portnr, String adr, String m) {
         int newPort = 0;
-        String connect = "Transmission";
-
+        String connect = "Transmission";        
         send = connect.getBytes();
         try {
             InetAddress address = InetAddress.getByName(adr);
             DatagramPacket conOK = new DatagramPacket(send, send.length, address, portnr);
             try {
-                int countTry = 20;
-                while (countTry < 300) {
+                int countTry = 40;
+                while (countTry < 200) {
                     socket.send(conOK);
                     try {
                         DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
                         socket.setSoTimeout(countTry);
                         socket.receive(receivePacket);
                         String con = new String(receivePacket.getData());
+                        System.out.println(con);
                         if (con.substring(0, con.indexOf('.')).equals("ConOK")) {
                             String newPortS = con.substring(con.indexOf('.'), con.length());
                             newPort = Integer.parseInt(newPortS);
@@ -102,9 +102,10 @@ public class UDPI {
                         }
                     } catch (SocketTimeoutException e) {
                         countTry = countTry + 40;
+                        System.out.println("timeout");
                     }
                 }
-                if (countTry > 300) {
+                if (countTry >= 200) {
                     System.out.println("Timeout Error Host Not Responding");
                     return;
                 }
@@ -136,7 +137,7 @@ public class UDPI {
 
                     DatagramSocket newSocket;
                     int newPort =49152;
-
+                    System.out.println("HEJ");
                     while (true) {
                         try {
                             newSocket = new DatagramSocket(newPort);
