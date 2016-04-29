@@ -78,7 +78,7 @@ public class UDPI {
 
     public void send(int portnr, String adr, String m) {
         int newPort = 0;
-        String connect = "Transmission";        
+        String connect = "Transmission";
         send = connect.getBytes();
         try {
             InetAddress address = InetAddress.getByName(adr);
@@ -94,7 +94,7 @@ public class UDPI {
                         String con = new String(receivePacket.getData());
                         System.out.println(con);
                         if (con.substring(0, con.indexOf('.')).equals("ConOK")) {
-                            String newPortS = con.substring(con.indexOf('.'), con.length());
+                            String newPortS = con.substring(con.indexOf('.'), con.indexOf('*'));
                             newPort = Integer.parseInt(newPortS);
                         } else {
                             System.out.println("ERROR Connection");
@@ -127,49 +127,47 @@ public class UDPI {
     }
 
     public void listen() {
-        listen = true;
-        while (listen == true) {
-            try {
-                DatagramPacket receiveP = new DatagramPacket(receiveD, receiveD.length);
-                socket.receive(receiveP);
-                connection = new String(receiveP.getData());
-                if (connection.equals("Transmission")) {
 
-                    DatagramSocket newSocket;
-                    int newPort =49152;
-                    System.out.println("HEJ");
-                    while (true) {
+        try {
+            DatagramPacket receiveP = new DatagramPacket(receiveD, receiveD.length);
+            socket.receive(receiveP);
+            connection = new String(receiveP.getData());
+            if (connection.subSequence(0, 12).equals("Transmission")) {
+
+                DatagramSocket newSocket;
+                int newPort = 49152;
+                while (true) {
+                    try {
+                        newSocket = new DatagramSocket(newPort);
+                        InetAddress IPAddress = receiveP.getAddress();
+                        int port = receiveP.getPort();
+
+                        String Response = "ConOK." + newPort+"*";
+                        send = Response.getBytes();
+                        DatagramPacket conOK = new DatagramPacket(send, send.length, IPAddress, port);
+                        socket.send(conOK);
                         try {
-                            newSocket = new DatagramSocket(newPort);
-                            InetAddress IPAddress = receiveP.getAddress();
-                            int port = receiveP.getPort();
+                            new Thread(new serverStart(newSocket, target, IPAddress, mSize)).start();
+                        } catch (Exception ex) {
+                            System.out.println("Can't create new port");
+                        }
 
-                            String Response = "ConOK." + newPort;
-                            send = Response.getBytes();
-                            DatagramPacket conOK = new DatagramPacket(send, send.length, IPAddress, port);
-                            socket.send(conOK);
-                            try {
-                                new Thread(new serverStart(newSocket, target, IPAddress, mSize)).start();
-                            } catch (Exception ex) {
-                                System.out.println("Can't create new port");
-                            }
-                            
+                        break;
+                    } catch (SocketException e) {
+                        newPort++;
+                        if (newPort >= 65535) {
+                            System.out.println("Error");
                             break;
-                        } catch (SocketException e) {
-                            newPort++;
-                            if (newPort >= 65535) {
-                                System.out.println("Error");
-                                break;
-                            }
                         }
                     }
-
                 }
 
-            } catch (IOException ex) {
-                System.out.println("ERROR" + Arrays.toString(ex.getStackTrace()));
             }
+
+        } catch (IOException ex) {
+            System.out.println("ERROR" + Arrays.toString(ex.getStackTrace()));
         }
+
     }
 
     public void stopListen() {
