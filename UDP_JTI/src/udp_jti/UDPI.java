@@ -236,8 +236,17 @@ public class UDPI {
      * @throws IOException
      */
     private void sendSingle(int missing, int newPort, InetAddress address) {
-        send = toBeSend.get(runde).get(missing-1).getBytes();
+        int S;
+        if ((runde + 1) == toBeSend.size()) {
+            S = 0;
+        } else {
+            S = 1;
+        }
+        int mis = (missing - 1);
+        String header = "HEAD*A" + mis + "#" + toBeSend.get(runde).size()+"S" + S + "*HEAD";
+        send = (header+toBeSend.get(runde).get(missing - 1)).getBytes();
         try {
+
             DatagramPacket sendPacket = new DatagramPacket(send, send.length, address, newPort);
             socket.send(sendPacket);
         } catch (IOException ex) {
@@ -265,7 +274,7 @@ public class UDPI {
 
     private void ProcessAck(String Ack, int newPort, InetAddress address) {
         int missing = 0;
-        String missingstring = Ack.substring(Ack.indexOf('t'));
+        String missingstring = Ack.substring(Ack.indexOf('t'), Ack.indexOf('*'));
         try {
             missing = Integer.parseInt(missingstring);
         } catch (Exception ex) {

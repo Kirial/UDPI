@@ -99,7 +99,7 @@ class serverStart implements Runnable {
                             do {
                                 missing = getMissing(); // get number of packet missíng 
                                 int ok = missing - 1;
-                                String thisAk = "AK" + ok + "Next" + missing;
+                                String thisAk = "AK" + ok + "Next" + missing+"*";
                                 byte[] sendData = thisAk.getBytes();
                                 DatagramPacket AK = new DatagramPacket(sendData, sendData.length, sender, port);
                                 socket.send(AK);
@@ -142,6 +142,7 @@ class serverStart implements Runnable {
         antalS = message.substring(0, message.indexOf('#'));
         indexS = message.substring(message.indexOf('#') + 1, message.indexOf("S"));
         sessionStatus = message.substring(message.indexOf('S') + 1, message.indexOf("*"));
+        System.out.println(message);
         if (sessionStatus.equals("1") && firstPacket == true) {
             continueSession = true;
         } else {
