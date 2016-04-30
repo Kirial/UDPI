@@ -16,13 +16,13 @@ import java.util.Arrays;
  */
 public class UDPI {
 
-    final private int mSize = 50;
-    private byte[] receiveD;
-    private byte[] send;
-    private String connection;
-    private int PORT_NR;
+    final private int mSize = 50; // packet size 
+    private byte[] receiveD; // bytes that are resived 
+    private byte[] send; // bytes that are to be send
+    private String connection; // string that is used to connect 
+    private int PORT_NR; // port nummer 
     private DatagramSocket socket = null;
-    private UDPII target;
+    private UDPII target; // interface for sender 
     private ArrayList<ArrayList<String>> toBeSend;
     InetAddress IP;
     int portnr;
@@ -32,40 +32,33 @@ public class UDPI {
     private boolean nextBurst;
 
     /**
-     * This constructor creates a port that will listen to the port
+     * This constructor creates a socket that will listen to the port
      * <p>
      * this port is only used to create sessions, all further communications
      * will
      * <p>
-     * go through the next port.
+     * go through another port.
      *
      * @param yourCode
      * @param p
      * @throws Exception
      */
     public UDPI(UDPII yourCode, int p) throws Exception {
-        PORT_NR = p;
+        PORT_NR = p; // portnr user wnatts to use 
         receiveD = new byte[mSize];
         send = new byte[mSize];
         target = yourCode;
 
-        while (true) {
-            try {
-                socket = new DatagramSocket(PORT_NR);
-                break;
-            } catch (IOException e) {
-                //System.out.println(e.getMessage());
-                PORT_NR++;
-                System.out.println("Port is in use, i'll try using port: " + PORT_NR);
-                if (PORT_NR >= 65535) {
-                    throw new Exception("No Free PORT Found ");
-                }
-            }
+        try {
+            socket = new DatagramSocket(PORT_NR);
+        } catch (IOException e) {
+            System.out.println("Port Is in use, use another port");
         }
     }
 
     public UDPI() throws Exception {
         nextBurst = false;
+
         receiveD = new byte[mSize];
         send = new byte[mSize];
         try {
@@ -79,40 +72,33 @@ public class UDPI {
     public void send(int portnr, String adr, String m) {
         int newPort = 0;
         toBeSend = new ArrayList<>();
-        buffer(m);
-        String connect = "Transmission";
+        buffer(m); // get the string divided into small chunks of data 
+        String connect = "Transmission"; //head
         send = connect.getBytes();
         try {
             InetAddress address = InetAddress.getByName(adr);
             DatagramPacket conOK = new DatagramPacket(send, send.length, address, portnr);
             try {
-                int countTry = 40;
-                while (countTry < 200) {
-                    socket.send(conOK);
-                    try {
-                        DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
-                        socket.setSoTimeout(countTry);
-                        socket.receive(receivePacket);
-                        String con = new String(receivePacket.getData());
 
-                        System.out.println(con);
-                        if (con.substring(0, con.indexOf('.')).equals("ConOK")) {
-                            String newPortS = con.substring(con.indexOf('.') + 1, con.indexOf('*'));
-                            newPort = Integer.parseInt(newPortS);
-                            System.out.println(newPort);
+                socket.send(conOK);
+                try {
+                    DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
+                    socket.setSoTimeout(1000);
+                    socket.receive(receivePacket);
+                    String con = new String(receivePacket.getData());
 
-                        } else {
-                            System.out.println("ERROR Connection");
-                            return;
-                        }
-                        break;
-                    } catch (SocketTimeoutException e) {
-                        countTry = countTry + 40;
-                        System.out.println("timeout");
+                    System.out.println(con);
+                    if (con.substring(0, con.indexOf('.')).equals("ConOK")) {
+                        String newPortS = con.substring(con.indexOf('.') + 1, con.indexOf('*'));
+                        newPort = Integer.parseInt(newPortS);
+                        System.out.println(newPort);
+
+                    } else {
+                        System.out.println("ERROR Connection");
+                        return;
                     }
-                }
-                if (countTry >= 200) {
-                    System.out.println("Timeout Error Host Not Responding");
+                } catch (SocketTimeoutException e) {
+                    System.out.println("timeout");
                     return;
                 }
 
@@ -121,7 +107,6 @@ public class UDPI {
                     sendBurst(newPort, address);
                     runde++;
                 }
-                socket.close();
 
             } catch (IOException ex) {
                 System.out.println(Arrays.toString(ex.getStackTrace()));
@@ -180,29 +165,35 @@ public class UDPI {
         listen = false;
     }
 
+    public void close() {
+        socket.close();
+    }
+
     /**
      * This method will divide the inData into chunks of 512 bytes
      */
     private void buffer(String m) {
         int count = 1;
         ArrayList<String> tempArray = new ArrayList<>();
+        toBeSend.add(tempArray);
+        int index = 0;
         while (m.length() > (mSize - 20)) {
-            tempArray.add(m.substring(0, (mSize - 20 - 1)));
+            toBeSend.get(index).add(m.substring(0, (mSize - 20 - 1)));
             m = m.substring((mSize - 20));
             if (count == 100) {
                 toBeSend.add(tempArray);
-                tempArray.clear();
+                index++;
             }
             count++;
 
         }
-        toBeSend.add(tempArray);
+        toBeSend.get(index).add(m);
     }
 
     private void sendBurst(int port, InetAddress thisAdr) {
         ArrayList<String> tempArray = toBeSend.get(runde);
 
-        for (int i = 1; i < tempArray.size(); i++) {
+        for (int i = 1; i <= tempArray.size(); i++) {
             int S;
             if ((runde + 1) == toBeSend.size()) {
                 S = 0;
@@ -210,8 +201,8 @@ public class UDPI {
                 S = 1;
             }
 
-            String header = ("HEAD*A" + i + "#" + tempArray.size() + "S" + S + "*HEAD");
-            String headerMedData = header + tempArray.get(i);
+            String header = ("HEAD*A" + tempArray.size() + "#" + i + "S" + S + "*HEAD");
+            String headerMedData = header + tempArray.get(i-1);
             send = headerMedData.getBytes();
             DatagramPacket sendPacket;
             try {
@@ -242,9 +233,10 @@ public class UDPI {
         } else {
             S = 1;
         }
-        int mis = (missing - 1);
-        String header = "HEAD*A" + toBeSend.get(runde).size() + "#" + mis+"S" + S + "*HEAD";
-        send = (header+toBeSend.get(runde).get(missing - 1)).getBytes();
+
+        String header = "HEAD*A" + toBeSend.get(runde).size() + "#" + missing + "S" + S + "*HEAD";
+        System.out.println(header+toBeSend.get(runde).get(missing - 1));
+        send = (header + toBeSend.get(runde).get(missing - 1)).getBytes();
         try {
 
             DatagramPacket sendPacket = new DatagramPacket(send, send.length, address, newPort);
@@ -262,6 +254,7 @@ public class UDPI {
             socket.setSoTimeout(200);
             socket.receive(receivePacket);
             String Ack = new String(receivePacket.getData());
+            System.out.println(Ack);
             ProcessAck(Ack, newPort, address);
 
         } catch (SocketTimeoutException timeout) {
@@ -274,13 +267,13 @@ public class UDPI {
 
     private void ProcessAck(String Ack, int newPort, InetAddress address) {
         int missing = 0;
-        String missingstring = Ack.substring(Ack.indexOf('t'), Ack.indexOf('*'));
+        String missingstring = Ack.substring(Ack.indexOf('t')+1, Ack.indexOf('*'));
         try {
             missing = Integer.parseInt(missingstring);
         } catch (Exception ex) {
             System.out.println(Arrays.toString(ex.getStackTrace()));
         }
-        if (missing == toBeSend.get(runde).size()) {
+        if (missing == 101) {
             return;
         } else {
             sendSingle(missing, newPort, address);

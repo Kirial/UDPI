@@ -65,6 +65,7 @@ class serverStart implements Runnable {
                 try {
                     socket.setSoTimeout(5000);// sets time out to one second. 
                     socket.receive(receivePacket); // get first Packet
+                    port = receivePacket.getPort();
                 } catch (SocketTimeoutException timeout) {
                     socket.close(); // timeout socet closes.
                     System.out.println("ERROR" + Arrays.toString(timeout.getStackTrace()));
@@ -83,7 +84,7 @@ class serverStart implements Runnable {
                         continueSession = false;
                     }
                     firstPacket = false;
-                    while (!allRes) {
+                    do{
                         try {
                             socket.setSoTimeout(50 * (antal - index));
                             socket.receive(receivePacket); // receive data  
@@ -95,6 +96,7 @@ class serverStart implements Runnable {
                         } catch (SocketTimeoutException timeout) {
                             index = antal;
                         }
+                        
                         if (index == antal) {
 
                             do {
@@ -120,7 +122,7 @@ class serverStart implements Runnable {
                             } while (missing != 101);
                         }
 
-                    }
+                    }while (!allRes);
                     String temps = "";
                     for (int i = 1; i < SessionsString.length; i++) {
                         temps = temps + SessionsString[i];
@@ -145,7 +147,6 @@ class serverStart implements Runnable {
         antalS = message.substring(0, message.indexOf('#'));
         indexS = message.substring(message.indexOf('#') + 1, message.indexOf("S"));
         sessionStatus = message.substring(message.indexOf('S') + 1, message.indexOf("*"));
-        System.out.println(message);
         if (sessionStatus.equals("1") && firstPacket == true) {
             continueSession = true;
         } else {
@@ -153,6 +154,7 @@ class serverStart implements Runnable {
         }
         String replaceM = antalS + "#" + indexS + "S" + sessionStatus + "*HEAD";
         message = message.replace(replaceM, "");
+        System.out.println(message);
         try {
             antal = Integer.parseInt(antalS);
             index = Integer.parseInt(indexS);
@@ -171,7 +173,7 @@ class serverStart implements Runnable {
      */
     private boolean[] getField(int antal) {
         boolean[] t = new boolean[antal];
-        for (int i = 1; i < antal; i++) {
+        for (int i = 0; i < antal; i++) {
             t[i] = false;
         }
         return t;
@@ -198,7 +200,7 @@ class serverStart implements Runnable {
     private void marck(String[] s) {
         if (!(modtaget[index])) {
             s[index] = message;
-            modtaget[(index)] = true;
+            modtaget[index] = true;
 
         }
     }

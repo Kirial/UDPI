@@ -17,8 +17,8 @@ public class sendmain {
     public static void main(String[] args) {
         while (true) {
             Scanner keyboard = new Scanner(System.in);
-                String IP = "10.16.225.40";
-                //String IP = "127.0.0.1";
+               // String IP = "10.16.225.40";
+                String IP = "127.0.0.1";
                 int Port = 50000;
             try {
 
