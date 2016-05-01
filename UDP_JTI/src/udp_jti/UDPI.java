@@ -178,7 +178,7 @@ public class UDPI {
         toBeSend.add(tempArray);
         int index = 0;
         while (m.length() > (mSize - 20)) {
-            toBeSend.get(index).add(m.substring(0, (mSize - 20 - 1)));
+            toBeSend.get(index).add(m.substring(0, (mSize - 20)));
             m = m.substring((mSize - 20));
             if (count == 100) {
                 toBeSend.add(tempArray);
@@ -200,7 +200,7 @@ public class UDPI {
             } else {
                 S = 1;
             }
-
+            
             String header = ("HEAD*A" + tempArray.size() + "#" + i + "S" + S + "*HEAD");
             String headerMedData = header + tempArray.get(i-1);
             send = headerMedData.getBytes();
