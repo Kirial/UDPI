@@ -122,7 +122,9 @@ class serverStart implements Runnable {
                                         }
                                     } catch (SocketTimeoutException timeout) {
                                     }
-                                } else {
+                                } 
+                                if(missing == 101 && sessionStatus.equals("0"))
+                                {
                                     allRes = true;
                                 }
 

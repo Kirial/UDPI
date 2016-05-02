@@ -174,15 +174,16 @@ public class UDPI {
      */
     private void buffer(String m) {
         int count = 1;
-        ArrayList<String> tempArray = new ArrayList<>();
-        toBeSend.add(tempArray);
+        toBeSend.add(new ArrayList<>());
         int index = 0;
+        
         while (m.length() > (mSize - 20)) {
             toBeSend.get(index).add(m.substring(0, (mSize - 20)));
             m = m.substring((mSize - 20));
-            if (count == 100) {
-                toBeSend.add(tempArray);
+            if (count == 10) {
+                toBeSend.add(new ArrayList<>());
                 index++;
+                count = 0;
             }
             count++;
 
@@ -236,7 +237,7 @@ public class UDPI {
             S = 1;
         }
 
-        String header = "HEAD*A" + toBeSend.get(runde).size() + "#" + missing + "S" + S + "*HEAD";
+        String header = "HEAD*A" + (toBeSend.get(runde)).size() + "#" + missing + "S" + S + "*HEAD";
         System.out.println(header+toBeSend.get(runde).get(missing - 1));
         send = (header + toBeSend.get(runde).get(missing - 1)).getBytes();
         try {
