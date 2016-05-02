@@ -16,14 +16,15 @@ public class sendmain {
 
     public static void main(String[] args) {
         System.out.println("Afsender");
-        System.out.println("Indtast tekst der skal sendes");
         while (true) {
-            Scanner keyboard = new Scanner(System.in,"windows-1252");
-               String indtastIP = keyboard.nextLine();
+            Scanner keyboard = new Scanner(System.in, "windows-1252");
+            System.out.println("Indtast IP adressen på modtageren");
+            String indtastIP = keyboard.nextLine();
             String IP = indtastIP;
-                //String IP = "127.0.0.1";
-                int Port = 50000;
+            //String IP = "127.0.0.1";
+            int Port = 50000;
             try {
+        System.out.println("Indtast tekst der skal sendes");
 
                 String inData = keyboard.nextLine();
                 System.out.println("Sending");
