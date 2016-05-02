@@ -18,16 +18,18 @@ import java.util.logging.Logger;
 public class UDPIModtager {
 
     final private int mSize = 50; // packet size 
-    private byte[] receiveD; // bytes that are resived 
-    private byte[] send; // bytes that are to be send
-    private String connection; // string that is used to connect 
+    int portnr; // new port nummer for connection 
+    private int timeout; // time out set by user
     private int PORT_NR; // port nummer 
 
+    private byte[] receiveD; // bytes that are resived 
+    private byte[] send; // bytes that are to be send
+
+    private String connection; // string that is used to connect 
+
     private UDPII target; // interface for sender 
-    InetAddress IP;
-    int portnr; // new port nummer for connection 
-    String adr; // users ip adress string version
-    private int timeout;
+    private InetAddress IP;
+
     private DatagramSocket socket = null;
     private DatagramPacket receiveP;
 
@@ -57,7 +59,7 @@ public class UDPIModtager {
     }
 
     /**
-     *  Listens to the port that is defined in constructor
+     * Listens to the port that is defined in constructor
      */
     public void listen() {
 
@@ -71,15 +73,15 @@ public class UDPIModtager {
                 while (true) {
                     try {
                         newSocket = new DatagramSocket(newPort);
-                        InetAddress IPAddress = receiveP.getAddress();
+                        IP = receiveP.getAddress();
                         int port = receiveP.getPort();
 
                         String Response = "ConOK." + newPort + "*";
                         send = Response.getBytes();
-                        DatagramPacket conOK = new DatagramPacket(send, send.length, IPAddress, port);
+                        DatagramPacket conOK = new DatagramPacket(send, send.length, IP, port);
                         socket.send(conOK);
                         try {
-                            new Thread(new serverStart(newSocket, target, IPAddress, mSize)).start();
+                            new Thread(new serverStart(newSocket, target, IP, mSize)).start();
                         } catch (Exception ex) {
                             System.out.println("Can't create new port");
                         }
