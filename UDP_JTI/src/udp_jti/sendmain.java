@@ -19,7 +19,8 @@ public class sendmain {
         System.out.println("Indtast tekst der skal sendes");
         while (true) {
             Scanner keyboard = new Scanner(System.in,"windows-1252");
-               String IP = "10.16.236.9";
+               String indtastIP = keyboard.nextLine();
+            String IP = indtastIP;
                 //String IP = "127.0.0.1";
                 int Port = 50000;
             try {

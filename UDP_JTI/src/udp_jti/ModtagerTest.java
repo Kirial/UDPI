@@ -5,7 +5,12 @@
  */
 package udp_jti;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 
@@ -20,6 +25,21 @@ public class ModtagerTest{
      */
     public static void main(String[] args) {
         System.out.println("Serveren");
+        System.out.println("Din IP adresse er ");
+        try {
+  InetAddress inet = InetAddress.getLocalHost();
+  InetAddress[] ips = InetAddress.getAllByName(inet.getCanonicalHostName());
+        System.out.println(ips[2]);
+/*
+  if (ips  != null ) {
+    for (int i = 0; i < ips.length; i++) {
+      System.out.println(ips[i]);
+      
+    }
+  }*/
+} catch (UnknownHostException e) {
+
+}
         // modtager main 
         UDPII target = new UDPII(){
 
