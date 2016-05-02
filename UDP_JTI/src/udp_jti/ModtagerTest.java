@@ -12,13 +12,11 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
-
 /**
  *
  * @author taras
  */
-public class ModtagerTest{
+public class ModtagerTest {
 
     /**
      * @param args the command line arguments
@@ -27,36 +25,36 @@ public class ModtagerTest{
         System.out.println("Serveren");
         System.out.println("Din IP adresse er ");
         try {
-  InetAddress inet = InetAddress.getLocalHost();
-  InetAddress[] ips = InetAddress.getAllByName(inet.getCanonicalHostName());
-        System.out.println(ips[2]);
-/*
+            InetAddress inet = InetAddress.getLocalHost();
+            InetAddress[] ips = InetAddress.getAllByName(inet.getCanonicalHostName());
+            System.out.println(ips[0]);
+            /*
   if (ips  != null ) {
     for (int i = 0; i < ips.length; i++) {
       System.out.println(ips[i]);
       
     }
   }*/
-} catch (UnknownHostException e) {
+        } catch (UnknownHostException e) {
 
-}
+        }
         // modtager main 
-        UDPII target = new UDPII(){
+        UDPII target = new UDPII() {
 
             @Override
             public void myCode(String m) {
-               System.out.println("modtaget: "+ m); // get message and then print it
+                System.out.println("modtaget: " + m); // get message and then print it
             }
 
         };
-        
+
         try {
-            UDPI nySocket = new UDPI(target,50000);
-            while(true){
-            nySocket.listen();
+            UDPIM nySocket = new UDPIM(target, 50000);
+            while (true) {
+                nySocket.listen();
             }
         } catch (Exception test) {
-            System.out.println("test");
+            System.out.println("Error");
         }
 
     }

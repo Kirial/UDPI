@@ -28,7 +28,7 @@ public class sendmain {
 
                 String inData = keyboard.nextLine();
                 System.out.println("Sending");
-                UDPI socket = new UDPI();
+                UDPIS socket = new UDPIS();
                 socket.send(Port, IP, inData);
             } catch (Exception ex) {
                 System.out.println(Arrays.toString(ex.getStackTrace()));

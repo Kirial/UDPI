@@ -2,8 +2,7 @@ package udp_jti;
 
 import java.net.*;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -16,7 +15,7 @@ import java.util.logging.Logger;
  */
 class serverStart implements Runnable {
 
-    private ArrayList<String> packet; // ArrayList Of String that well be returned to the caller
+    private ArrayList<String[]> packet; // ArrayList Of String that well be returned to the caller
     private DatagramSocket socket; // socket that is send to and from 
     private byte[] receiveD; // data from sender 
     private byte[] sendD; // data to send 
@@ -35,7 +34,6 @@ class serverStart implements Runnable {
     private int missing;
     private InetAddress sender;
     private int port;
-    private int countSession = 0;
     boolean allRes;
 
     /**
@@ -58,9 +56,8 @@ class serverStart implements Runnable {
     @Override
     public void run() {
 
-        missing = 101; // this means no packets are missing 
-
-        while (continueSession) {
+        int indexArray = 0;
+        while (continueSession){
             firstPacket = true; // wait for the first packet is received. 
             try {
                 //If the first message never arives the connection is closed after 1 second. 
@@ -78,15 +75,14 @@ class serverStart implements Runnable {
 
                     message = new String(receivePacket.getData()); // get message (string)
                     clearD(receiveD);
-                    allRes = false;
                     getData();// separate data 
-                    String[] SessionsString = new String[antal + 1];
+                    packet.add(new String[antal + 1]);
                     modtaget = getField(antal + 1); // creates a array of boollean variables 
-                    marck(SessionsString); // add to list after
-                    if (antal == index && sessionStatus.equals("0")) {
-                        continueSession = false;
-                    }
+                    marck(indexArray); // add to list after
+
                     firstPacket = false;
+                    allRes = false;
+
                     while (!allRes) {
                         try {
                             socket.setSoTimeout(50 * (antal - index));
@@ -95,55 +91,49 @@ class serverStart implements Runnable {
                                 message = new String(receivePacket.getData());
                                 clearD(receiveD);
                                 getData(); // sepparate data 
-                                marck(SessionsString);
+                                marck(indexArray);
                             }
                         } catch (SocketTimeoutException timeout) {
                             index = antal;
                         }
 
                         if (index == antal) {
+                            missing = getMissing(); // get number of packet missíng 
 
-                            do {
-                                missing = getMissing(); // get number of packet missíng 
+                            while (missing != 101) {
                                 int ok = missing - 1;
                                 String thisAk = "AK" + ok + "Next" + missing + "*";
                                 sendD = thisAk.getBytes();
                                 DatagramPacket AK = new DatagramPacket(sendD, sendD.length, sender, port);
                                 socket.send(AK);
-                                if (missing != 101) {
-                                    try {
-                                        socket.setSoTimeout(200);
-                                        socket.receive(receivePacket);
-                                        if (receivePacket.getAddress().equals(sender)) {
-                                            message = new String(receivePacket.getData());
-                                            clearD(receiveD);
-                                            getData();
-                                            marck(SessionsString);
-                                        }
-                                    } catch (SocketTimeoutException timeout) {
+                                try {
+                                    socket.setSoTimeout(200);
+                                    socket.receive(receivePacket);
+                                    if (receivePacket.getAddress().equals(sender)) {
+                                        message = new String(receivePacket.getData());
+                                        clearD(receiveD);
+                                        getData();
+                                        marck(indexArray);
                                     }
-                                } 
-                                if(missing == 101 && sessionStatus.equals("0"))
-                                {
-                                    allRes = true;
-                                }
+                                } catch (SocketTimeoutException timeout) {
 
-                            } while (missing != 101);
+                                }
+                                missing = getMissing(); // get number of packet missíng 
+                            }
+                            String thisAk = "AK" + 100 + "Next" + 101 + "*";
+                            sendD = thisAk.getBytes();
+                            DatagramPacket AK = new DatagramPacket(sendD, sendD.length, sender, port);
+                            socket.send(AK);
+                            allRes = true;
                         }
 
                     }
-
-                    String temps = "";
-                    for (int i = 1; i < SessionsString.length; i++) {
-                        temps = temps + SessionsString[i];
-                    }
-                    packet.add(temps);
+                    indexArray++;
 
                 }
             } catch (Exception ex) {
                 System.out.print(Arrays.toString(ex.getStackTrace()));
             }
-            countSession++;
         }
 
         target.myCode(connectData());
@@ -153,18 +143,18 @@ class serverStart implements Runnable {
      * Get Data separated. Header from original Message.
      */
     private void getData() {
+        System.out.println(message);
         message = message.replace("HEAD*A", "");
         antalS = message.substring(0, message.indexOf('#'));
         indexS = message.substring(message.indexOf('#') + 1, message.indexOf("S"));
         sessionStatus = message.substring(message.indexOf('S') + 1, message.indexOf("*"));
-        if (sessionStatus.equals("1") && firstPacket == true) {
-            continueSession = true;
-        } else {
+        if (sessionStatus.equals("0") && firstPacket == true) {
             continueSession = false;
         }
+        
         String replaceM = antalS + "#" + indexS + "S" + sessionStatus + "*HEAD";
         message = message.replace(replaceM, "");
-        System.out.println(message);
+
         try {
             antal = Integer.parseInt(antalS);
             index = Integer.parseInt(indexS);
@@ -207,11 +197,10 @@ class serverStart implements Runnable {
     /**
      * add data to message.
      */
-    private void marck(String[] s) {
+    private void marck(int i) {
         if (!(modtaget[index])) {
-            s[index] = message;
+            packet.get(i)[index] = message;
             modtaget[index] = true;
-
         }
     }
 
@@ -221,13 +210,16 @@ class serverStart implements Runnable {
     private String connectData() {
         String S = "";
 
-        for (String s : packet) {
-            S = S + s;
+        for (String[] s : packet) {
+            for (int i = 1; i<s.length; i++) {
+                S = S + s[i];
+            }
         }
         return S;
     }
-    private void clearD(byte[] data){
-        for(int i = 0; i < data.length; i++){
+
+    private void clearD(byte[] data) {
+        for (int i = 0; i < data.length; i++) {
             data[i] = 0;
         }
     }
