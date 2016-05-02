@@ -203,7 +203,9 @@ public class UDPI {
             
             String header = ("HEAD*A" + tempArray.size() + "#" + i + "S" + S + "*HEAD");
             String headerMedData = header + tempArray.get(i-1);
+            
             send = headerMedData.getBytes();
+            System.out.println(Arrays.toString(send));
             DatagramPacket sendPacket;
             try {
                 sendPacket = new DatagramPacket(send, send.length, thisAdr, port);

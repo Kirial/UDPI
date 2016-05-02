@@ -73,33 +73,34 @@ class serverStart implements Runnable {
                     System.out.println("ERROR" + Arrays.toString(timeout.getStackTrace()));
                     return;
                 }
-                
+
                 if (receivePacket.getAddress().equals(sender)) { // check ip of the sender ignore rest
 
                     message = new String(receivePacket.getData()); // get message (string)
+                    clearD(receiveD);
                     allRes = false;
                     getData();// separate data 
                     String[] SessionsString = new String[antal + 1];
                     modtaget = getField(antal + 1); // creates a array of boollean variables 
                     marck(SessionsString); // add to list after
                     if (antal == index && sessionStatus.equals("0")) {
-                        allRes = true;
                         continueSession = false;
                     }
                     firstPacket = false;
-                    do{
+                    while (!allRes) {
                         try {
                             socket.setSoTimeout(50 * (antal - index));
                             socket.receive(receivePacket); // receive data  
                             if (receivePacket.getAddress().equals(sender)) {
                                 message = new String(receivePacket.getData());
+                                clearD(receiveD);
                                 getData(); // sepparate data 
                                 marck(SessionsString);
                             }
                         } catch (SocketTimeoutException timeout) {
                             index = antal;
                         }
-                        
+
                         if (index == antal) {
 
                             do {
@@ -115,18 +116,21 @@ class serverStart implements Runnable {
                                         socket.receive(receivePacket);
                                         if (receivePacket.getAddress().equals(sender)) {
                                             message = new String(receivePacket.getData());
+                                            clearD(receiveD);
                                             getData();
                                             marck(SessionsString);
                                         }
                                     } catch (SocketTimeoutException timeout) {
                                     }
+                                } else {
+                                    allRes = true;
                                 }
 
                             } while (missing != 101);
                         }
 
-                    }while (!allRes);
-                    
+                    }
+
                     String temps = "";
                     for (int i = 1; i < SessionsString.length; i++) {
                         temps = temps + SessionsString[i];
@@ -214,14 +218,16 @@ class serverStart implements Runnable {
      */
     private String connectData() {
         String S = "";
-        int i = 0;
+
         for (String s : packet) {
-            
-            System.out.println("Run "+i+" : "+S);
             S = S + s;
-            i++;
         }
         return S;
+    }
+    private void clearD(byte[] data){
+        for(int i = 0; i < data.length; i++){
+            data[i] = 0;
+        }
     }
 
 }
