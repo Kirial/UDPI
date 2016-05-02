@@ -180,7 +180,7 @@ public class UDPI {
         while (m.length() > (mSize - 20)) {
             toBeSend.get(index).add(m.substring(0, (mSize - 20)));
             m = m.substring((mSize - 20));
-            if (count == 100) {
+            if (count == 10) {
                 toBeSend.add(tempArray);
                 index++;
             }
