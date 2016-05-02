@@ -3,6 +3,8 @@ package udp_jti;
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -13,19 +15,21 @@ import java.util.Arrays;
  *
  * @author Family
  */
-public class UDPIM {
+public class UDPIModtager {
 
     final private int mSize = 50; // packet size 
     private byte[] receiveD; // bytes that are resived 
     private byte[] send; // bytes that are to be send
     private String connection; // string that is used to connect 
     private int PORT_NR; // port nummer 
-    private DatagramSocket socket = null;
+
     private UDPII target; // interface for sender 
     InetAddress IP;
-    int portnr;
-    String adr;
-
+    int portnr; // new port nummer for connection 
+    String adr; // users ip adress string version
+    private int timeout;
+    private DatagramSocket socket = null;
+    private DatagramPacket receiveP;
 
     /**
      * This constructor creates a socket that will listen to the port
@@ -39,12 +43,12 @@ public class UDPIM {
      * @param p
      * @throws Exception
      */
-    public UDPIM(UDPII yourCode, int p) throws Exception {
+    public UDPIModtager(UDPII yourCode, int p) throws Exception {
         PORT_NR = p; // portnr user wnatts to use 
-        receiveD = new byte[mSize];
-        send = new byte[mSize];
+        receiveD = new byte[mSize]; // size
+        send = new byte[mSize]; // size
         target = yourCode;
-
+        receiveP = new DatagramPacket(receiveD, receiveD.length);
         try {
             socket = new DatagramSocket(PORT_NR);
         } catch (IOException e) {
@@ -53,12 +57,11 @@ public class UDPIM {
     }
 
     /**
-     * 
+     *  Listens to the port that is defined in constructor
      */
     public void listen() {
 
         try {
-            DatagramPacket receiveP = new DatagramPacket(receiveD, receiveD.length);
             socket.receive(receiveP);
             connection = new String(receiveP.getData());
             if (connection.subSequence(0, 12).equals("Transmission")) {
@@ -92,15 +95,27 @@ public class UDPIM {
                 }
 
             }
-
         } catch (IOException ex) {
             System.out.println("ERROR" + Arrays.toString(ex.getStackTrace()));
         }
-
     }
 
+    /**
+     * The method will listen to the socket for t amount of time in milliseconds
+     *
+     * @param t
+     */
+    public void listenshort(int t) {
+        timeout = t;
+        try {
+            socket.setSoTimeout(t);
+            listen();
+        } catch (SocketException ex) {
+        }
+    }
 
     public void close() {
         socket.close();
     }
+
 }

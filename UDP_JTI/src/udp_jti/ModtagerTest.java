@@ -52,7 +52,7 @@ public class ModtagerTest {
         };
 
         try {
-            UDPIM nySocket = new UDPIM(target, 50000);
+            UDPIModtager nySocket = new UDPIModtager(target, 50000);
             while (true) {
                 nySocket.listen();
             }
