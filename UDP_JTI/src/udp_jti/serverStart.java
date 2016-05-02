@@ -226,7 +226,6 @@ class serverStart implements Runnable {
         for (String[] s : packet) {
             for (int i = 1; i < s.length; i++) {
                 S = S + s[i];
-                System.out.println("S" + s[i] + "F");
             }
         }
         return S;

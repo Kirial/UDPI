@@ -24,19 +24,22 @@ public class UDPIS {
     final private int mSize = 50; // packet size 
     private byte[] receiveD; // bytes that are resived 
     private byte[] send; // bytes that are to be send
-    private int runde;
+    private int runde; 
+    private int noAckCount; 
+    private int burstSize = 10;
+    
     private ArrayList<ArrayList<String>> toBeSend;
     private DatagramSocket socket = null;
 
     public UDPIS() throws Exception {
-
+        noAckCount = 0;
         receiveD = new byte[mSize];
         send = new byte[mSize];
         try {
             socket = new DatagramSocket();
         } catch (SocketException ex) {
             System.out.println(Arrays.toString(ex.getStackTrace()));
-            throw new Exception("Error");
+            throw new Exception("Error, Socket is in use");
         }
     }
 
@@ -51,31 +54,33 @@ public class UDPIS {
             DatagramPacket conOK = new DatagramPacket(send, send.length, address, portnr);
             try {
 
-                socket.send(conOK);
+                socket.send(conOK); // begin transmission
                 try {
                     DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
                     socket.setSoTimeout(1000);
                     socket.receive(receivePacket);
                     String con = new String(receivePacket.getData());
 
-                    System.out.println(con);
                     if (con.substring(0, con.indexOf('.')).equals("ConOK")) {
                         String newPortS = con.substring(con.indexOf('.') + 1, con.indexOf('*'));
-                        newPort = Integer.parseInt(newPortS);
-                        System.out.println(newPort);
+                        newPort = Integer.parseInt(newPortS); // get new transmissions port
 
                     } else {
                         System.out.println("ERROR Connection");
                         return;
                     }
-                } catch (SocketTimeoutException e) {
+                } catch (SocketTimeoutException e) { // timeout no responce 
                     System.out.println("timeout");
                     return;
                 }
 
                 runde = 0;
                 for (ArrayList<String> s : toBeSend) {
-                    sendBurst(newPort, address);
+                    if (noAckCount == 100) {
+                        System.out.println("Server not Responding");
+                        return;
+                    }
+                    sendBurst(newPort, address); // send first burst
                     runde++;
                 }
 
@@ -87,7 +92,10 @@ public class UDPIS {
             System.out.println("Invalid IP Adress");
         }
     }
-
+    /**
+     * Devides string into small packets
+     * @param m 
+     */
     private void buffer(String m) {
         int count = 1;
         toBeSend.add(new ArrayList<>());
@@ -96,7 +104,7 @@ public class UDPIS {
         while (m.length() > (mSize - 20)) {
             toBeSend.get(index).add(m.substring(0, (mSize - 20)));
             m = m.substring((mSize - 20));
-            if (count == 10) {
+            if (count == burstSize) {
                 toBeSend.add(new ArrayList<>());
                 index++;
                 count = 0;
@@ -106,7 +114,11 @@ public class UDPIS {
         }
         toBeSend.get(index).add(m);
     }
-
+/**
+ * Sends packets
+ * @param port
+ * @param thisAdr 
+ */
     private void sendBurst(int port, InetAddress thisAdr) {
         ArrayList<String> tempArray = toBeSend.get(runde);
 
@@ -131,7 +143,9 @@ public class UDPIS {
             }
 
         }
-
+        if (noAckCount == 100) {
+            return;
+        }
         waitAck(port, thisAdr);
 
     }
@@ -161,9 +175,18 @@ public class UDPIS {
         } catch (IOException ex) {
             System.out.println(Arrays.toString(ex.getStackTrace()) + "Server not found");
         }
+        if (noAckCount == 100) {
+            System.out.println("Server not Responding");
+            return;
+        }
         waitAck(newPort, address);
-    }
 
+    }
+    /**
+     * Waits for ack if no ack arives after 100 tryes it terminates transmission
+     * @param newPort
+     * @param address 
+     */
     private void waitAck(int newPort, InetAddress address) {
 
         DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
@@ -173,15 +196,21 @@ public class UDPIS {
             String Ack = new String(receivePacket.getData());
             System.out.println(Ack);
             ProcessAck(Ack, newPort, address);
-
+            noAckCount = 0;
         } catch (SocketTimeoutException timeout) {
+            noAckCount++;
             sendSingle(toBeSend.get(runde).size(), newPort, address);
         } catch (IOException ex) {
 
         }
 
     }
-
+    /**
+     * loocks at the acks and desides what to do
+     * @param Ack
+     * @param newPort
+     * @param address 
+     */
     private void ProcessAck(String Ack, int newPort, InetAddress address) {
         int missing = 0;
         String missingstring = Ack.substring(Ack.indexOf('t') + 1, Ack.indexOf('*'));
