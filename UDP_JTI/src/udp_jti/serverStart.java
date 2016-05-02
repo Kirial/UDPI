@@ -2,6 +2,8 @@ package udp_jti;
 
 import java.net.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -71,6 +73,7 @@ class serverStart implements Runnable {
                     System.out.println("ERROR" + Arrays.toString(timeout.getStackTrace()));
                     return;
                 }
+                
                 if (receivePacket.getAddress().equals(sender)) { // check ip of the sender ignore rest
 
                     message = new String(receivePacket.getData()); // get message (string)
@@ -123,6 +126,7 @@ class serverStart implements Runnable {
                         }
 
                     }while (!allRes);
+                    
                     String temps = "";
                     for (int i = 1; i < SessionsString.length; i++) {
                         temps = temps + SessionsString[i];
@@ -210,9 +214,12 @@ class serverStart implements Runnable {
      */
     private String connectData() {
         String S = "";
-
+        int i = 0;
         for (String s : packet) {
+            
+            System.out.println("Run "+i+" : "+S);
             S = S + s;
+            i++;
         }
         return S;
     }
