@@ -25,18 +25,19 @@ public class ModtagerTest{
      */
     public static void main(String[] args) {
         System.out.println("Serveren");
-        System.out.println("Din IP adresse er ");
+        System.out.println("Din IP adresse er. ");
         try {
   InetAddress inet = InetAddress.getLocalHost();
   InetAddress[] ips = InetAddress.getAllByName(inet.getCanonicalHostName());
-        System.out.println(ips[2]);
-/*
   if (ips  != null ) {
     for (int i = 0; i < ips.length; i++) {
       System.out.println(ips[i]);
       
     }
-  }*/
+          System.out.println("vælg en af dem.");
+          
+
+  }
 } catch (UnknownHostException e) {
 
 }
