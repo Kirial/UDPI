@@ -15,15 +15,19 @@ import java.util.Scanner;
 public class sendmain {
 
     public static void main(String[] args) {
+        System.out.println("Afsender");
         while (true) {
-            Scanner keyboard = new Scanner(System.in,"windows-1252");
-               // String IP = "10.16.225.40";
-                String IP = "127.0.0.1";
-                int Port = 50000;
+            Scanner keyboard = new Scanner(System.in, "windows-1252");
+            System.out.println("Indtast IP adressen på modtageren");
+            String indtastIP = keyboard.nextLine();
+            String IP = indtastIP;
+            //String IP = "127.0.0.1";
+            int Port = 50000;
             try {
+        System.out.println("Indtast tekst der skal sendes");
 
                 String inData = keyboard.nextLine();
-                System.out.println("Sendeing");
+                System.out.println("Sending");
                 UDPI socket = new UDPI();
                 socket.send(Port, IP, inData);
             } catch (Exception ex) {
