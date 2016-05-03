@@ -35,6 +35,8 @@ public class ModtagerTest {
       
     }
           System.out.println("vælg en af dem.");
+          System.out.println("");
+          System.out.println("");
           
 
   }

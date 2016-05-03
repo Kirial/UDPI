@@ -19,7 +19,7 @@ import java.util.Arrays;
  *
  * @author taras
  */
-public class UDPIS {
+public class UDPISender {
 
     final private int mSize = 50; // packet size 
     private byte[] receiveD; // bytes that are resived 
@@ -31,7 +31,7 @@ public class UDPIS {
     private ArrayList<ArrayList<String>> toBeSend;
     private DatagramSocket socket = null;
 
-    public UDPIS() throws Exception {
+    public UDPISender() throws Exception {
         noAckCount = 0;
         receiveD = new byte[mSize];
         send = new byte[mSize];
