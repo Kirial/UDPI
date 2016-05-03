@@ -78,8 +78,9 @@ class serverStart implements Runnable {
                 }
 
                 if (receivePacket.getAddress().equals(sender)) { // check ip of the sender, ignore rest
-                    receiveD = receivePacket.getData();
-                    message = new String(myString()); // get message (string)
+                    /*receiveD = receivePacket.getData();
+                    message = myString(); // get message (string)*/
+                    message = new String(receivePacket.getData());
                     clearD(receiveD); // clears data from array 
                     getData();// separate data 
                     packet.add(new String[antal + 1]);
@@ -94,8 +95,9 @@ class serverStart implements Runnable {
                             socket.setSoTimeout(50 * (antal - index));
                             socket.receive(receivePacket); // receive data  
                             if (receivePacket.getAddress().equals(sender)) {
-                                receiveD = receivePacket.getData();
-                                message = new String(myString()); // get message (string)
+                                /*receiveD = receivePacket.getData();
+                                message = myString(); // get message (string)*/
+                                message = new String(receivePacket.getData());
                                 clearD(receiveD); // clears data from array 
                                 getData(); // sepparate data 
                                 marck(indexArray);
@@ -118,8 +120,9 @@ class serverStart implements Runnable {
                                     socket.setSoTimeout(200);
                                     socket.receive(receivePacket);
                                     if (receivePacket.getAddress().equals(sender)) {
-                                        receiveD = receivePacket.getData();
-                                        message = new String(myString()); // get message (string)
+                                        /*receiveD = receivePacket.getData();
+                                        message = myString(); // get message (string)*/
+                                        message = new String(receivePacket.getData());
                                         clearD(receiveD); // clears data from array 
                                         getData();
                                         marck(indexArray);

@@ -57,7 +57,7 @@ public class UDPIS {
                 socket.send(conOK); // begin transmission
                 try {
                     DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
-                    socket.setSoTimeout(1000);
+                    socket.setSoTimeout(10000);
                     socket.receive(receivePacket);
                     String con = new String(receivePacket.getData());
 
