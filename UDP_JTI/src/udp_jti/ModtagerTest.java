@@ -49,6 +49,10 @@ public class ModtagerTest {
             @Override
             public void myCode(String m) {
                 System.out.println("modtaget: " + m); // get message and then print it
+                String sendM = "User Datagram Protocol, UDP er en protokol til overførsel af data. UDP er en del af Internet-protokolstakken, som oftest benævnes TCP/IP. I protokolstakken anvendes enten TCP eller UDP. UDP giver ingen garanti for at data kommer frem (eller rettere: Afsenderen får ikke besked hvis data ikke kommer frem, ligeledes får afsender ikke besked hvorvidt data er modtaget) igen User Datagram Protocol, UDP er en protokol til overførsel af data. UDP er en del af Internet-protokolstakken, som oftest benævnes TCP/IP. I protokolstakken anvendes enten TCP eller UDP. UDP giver ingen garanti for at data kommer frem (eller rettere: Afsenderen får ikke besked hvis data ikke kommer frem, ligeledes får afsender ikke besked hvorvidt data er modtaget)";
+                if(m.contentEquals(sendM)){
+                    System.out.println("alt er modtaget");
+                }
             }
 
         };

@@ -24,10 +24,10 @@ public class UDPISender {
     final private int mSize = 50; // packet size 
     private byte[] receiveD; // bytes that are resived 
     private byte[] send; // bytes that are to be send
-    private int runde; 
-    private int noAckCount; 
+    private int runde;
+    private int noAckCount;
     private int burstSize = 10;
-    
+
     private ArrayList<ArrayList<String>> toBeSend;
     private DatagramSocket socket = null;
 
@@ -45,19 +45,19 @@ public class UDPISender {
         int newPort = 0;
         toBeSend = new ArrayList<>();
         buffer(m); // get the string divided into small chunks of data 
+        send = new byte[mSize];
         String connect = "Transmission"; //head
         send = connect.getBytes();
         try {
             InetAddress address = InetAddress.getByName(adr);
-            send = new byte[mSize];                    
+
             DatagramPacket conOK = new DatagramPacket(send, send.length, address, portnr);
             try {
-
                 socket.send(conOK); // begin transmission
                 try {
-                    DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
                     receiveD = new byte[mSize];
-                    socket.setSoTimeout(10000);
+                    DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
+                    socket.setSoTimeout(1000);
                     socket.receive(receivePacket);
                     String con = new String(receivePacket.getData());
 
@@ -92,9 +92,11 @@ public class UDPISender {
             System.out.println("Invalid IP Adress");
         }
     }
+
     /**
      * Devides string into small packets
-     * @param m 
+     *
+     * @param m
      */
     private void buffer(String m) {
         int count = 1;
@@ -114,11 +116,13 @@ public class UDPISender {
         }
         toBeSend.get(index).add(m);
     }
-/**
- * Sends packets
- * @param port
- * @param thisAdr 
- */
+
+    /**
+     * Sends packets
+     *
+     * @param port
+     * @param thisAdr
+     */
     private void sendBurst(int port, InetAddress thisAdr) {
         ArrayList<String> tempArray = toBeSend.get(runde);
 
@@ -183,10 +187,12 @@ public class UDPISender {
         waitAck(newPort, address);
 
     }
+
     /**
      * Waits for ack if no ack arives after 100 tryes it terminates transmission
+     *
      * @param newPort
-     * @param address 
+     * @param address
      */
     private void waitAck(int newPort, InetAddress address) {
         receiveD = new byte[mSize];
@@ -206,11 +212,13 @@ public class UDPISender {
         }
 
     }
+
     /**
      * loocks at the acks and desides what to do
+     *
      * @param Ack
      * @param newPort
-     * @param address 
+     * @param address
      */
     private void ProcessAck(String Ack, int newPort, InetAddress address) {
         int missing = 0;

@@ -17,8 +17,8 @@ public class UDPIModtager {
 
     final private int mSize = 50; // packet size 
     int portnr; // new port nummer for connection 
-    private int timeout; // time out set by user
     private int PORT_NR; // port nummer 
+    private int timeout;
 
     private byte[] receiveD; // bytes that are resived 
     private byte[] send; // bytes that are to be send
@@ -46,7 +46,6 @@ public class UDPIModtager {
     public UDPIModtager(UDPII yourCode, int p) throws Exception {
         PORT_NR = p; // portnr user wnatts to use 
         receiveD = new byte[mSize]; // size
-        send = new byte[mSize]; // size
         target = yourCode;
         receiveP = new DatagramPacket(receiveD, receiveD.length);
         try {
@@ -73,8 +72,9 @@ public class UDPIModtager {
                         newSocket = new DatagramSocket(newPort);
                         IP = receiveP.getAddress();
                         int port = receiveP.getPort();
-
+                        
                         String Response = "ConOK." + newPort + "*";
+                        send = new byte[mSize];
                         send = Response.getBytes();
                         DatagramPacket conOK = new DatagramPacket(send, send.length, IP, port);
                         socket.send(conOK);
