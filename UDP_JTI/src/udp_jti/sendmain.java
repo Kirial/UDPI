@@ -21,7 +21,7 @@ public class sendmain {
             System.out.println("Indtast IP adressen på modtageren");
             String indtastIP = keyboard.nextLine();
             String IP = indtastIP;
-            //String IP = "127.0.0.1";
+          //  String IP = "127.0.0.1";
             int Port = 50000;
             try {
         System.out.println("Indtast tekst der skal sendes");

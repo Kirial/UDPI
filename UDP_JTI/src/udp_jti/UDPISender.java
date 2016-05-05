@@ -33,8 +33,6 @@ public class UDPISender {
 
     public UDPISender() throws Exception {
         noAckCount = 0;
-        receiveD = new byte[mSize];
-        send = new byte[mSize];
         try {
             socket = new DatagramSocket();
         } catch (SocketException ex) {
@@ -51,12 +49,14 @@ public class UDPISender {
         send = connect.getBytes();
         try {
             InetAddress address = InetAddress.getByName(adr);
+            send = new byte[mSize];                    
             DatagramPacket conOK = new DatagramPacket(send, send.length, address, portnr);
             try {
 
                 socket.send(conOK); // begin transmission
                 try {
                     DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
+                    receiveD = new byte[mSize];
                     socket.setSoTimeout(10000);
                     socket.receive(receivePacket);
                     String con = new String(receivePacket.getData());
@@ -132,7 +132,7 @@ public class UDPISender {
 
             String header = ("HEAD*A" + tempArray.size() + "#" + i + "S" + S + "*HEAD");
             String headerMedData = header + tempArray.get(i - 1);
-
+            send = new byte[mSize];
             send = headerMedData.getBytes();
             DatagramPacket sendPacket;
             try {
@@ -167,6 +167,7 @@ public class UDPISender {
         }
 
         String header = "HEAD*A" + (toBeSend.get(runde)).size() + "#" + missing + "S" + S + "*HEAD";
+        send = new byte[mSize];
         send = (header + toBeSend.get(runde).get(missing - 1)).getBytes();
         try {
 
@@ -188,7 +189,7 @@ public class UDPISender {
      * @param address 
      */
     private void waitAck(int newPort, InetAddress address) {
-
+        receiveD = new byte[mSize];
         DatagramPacket receivePacket = new DatagramPacket(receiveD, receiveD.length);
         try {
             socket.setSoTimeout(200);

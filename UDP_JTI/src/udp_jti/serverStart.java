@@ -24,6 +24,7 @@ class serverStart implements Runnable {
     private int index; // pack number
     private int missing; // missing packet 
     private int port; // port used in the transfer
+    private int dataS;
 
     private byte[] receiveD; // data from sender 
     private byte[] sendD; // data to send 
@@ -50,12 +51,10 @@ class serverStart implements Runnable {
      */
     public serverStart(DatagramSocket s, UDPII t, InetAddress i, int dataSize) throws Exception {
         packet = new ArrayList<>();
-        receiveD = new byte[dataSize]; // maxsize to be received 
-        sendD = new byte[dataSize]; // maxsize to be send 
+        dataS = dataSize;
         target = t; // target of the caller
         socket = s; // port that we send from  
         sender = i;
-        receivePacket = new DatagramPacket(receiveD, receiveD.length); //receive packet objekt  
         continueSession = true; // the continue Session will stop after all packets are received. 
     }
 
@@ -66,6 +65,8 @@ class serverStart implements Runnable {
         while (continueSession) {
             firstPacket = true; // wait for the first packet is received. 
             try {
+                receiveD = new byte[dataS]; // maxsize to be received 
+                receivePacket = new DatagramPacket(receiveD, receiveD.length); //receive packet objekt 
                 //If the first message never arives the connection is closed after 1 second. 
                 try {
                     socket.setSoTimeout(5000);// sets time out to five seconds. 
@@ -78,10 +79,7 @@ class serverStart implements Runnable {
                 }
 
                 if (receivePacket.getAddress().equals(sender)) { // check ip of the sender, ignore rest
-                    /*receiveD = receivePacket.getData();
-                    message = myString(); // get message (string)*/
                     message = new String(receivePacket.getData());
-                    clearD(receiveD); // clears data from array 
                     getData();// separate data 
                     packet.add(new String[antal + 1]);
                     modtaget = getField(antal + 1); // creates a array of boollean variables 
@@ -92,13 +90,14 @@ class serverStart implements Runnable {
 
                     while (!allRes) {
                         try {
+                            receiveD = new byte[dataS]; // maxsize to be received 
+                            receivePacket = new DatagramPacket(receiveD, receiveD.length); //receive packet objekt 
                             socket.setSoTimeout(50 * (antal - index));
                             socket.receive(receivePacket); // receive data  
                             if (receivePacket.getAddress().equals(sender)) {
                                 /*receiveD = receivePacket.getData();
                                 message = myString(); // get message (string)*/
                                 message = new String(receivePacket.getData());
-                                clearD(receiveD); // clears data from array 
                                 getData(); // sepparate data 
                                 marck(indexArray);
                             }
@@ -113,17 +112,19 @@ class serverStart implements Runnable {
                             while (missing != 101) {
                                 int ok = missing - 1;
                                 String thisAk = "AK" + ok + "Next" + missing + "*";
+                                sendD = new byte[dataS];
                                 sendD = thisAk.getBytes();
                                 DatagramPacket AK = new DatagramPacket(sendD, sendD.length, sender, port);
                                 socket.send(AK);
                                 try {
                                     socket.setSoTimeout(200);
+                                    receiveD = new byte[dataS]; // maxsize to be received 
+                                    receivePacket = new DatagramPacket(receiveD, receiveD.length); //receive packet objekt 
                                     socket.receive(receivePacket);
                                     if (receivePacket.getAddress().equals(sender)) {
                                         /*receiveD = receivePacket.getData();
                                         message = myString(); // get message (string)*/
                                         message = new String(receivePacket.getData());
-                                        clearD(receiveD); // clears data from array 
                                         getData();
                                         marck(indexArray);
                                     }
@@ -138,6 +139,7 @@ class serverStart implements Runnable {
                                 missing = getMissing(); // get number of packet missíng 
                             }
                             String thisAk = "AK" + 100 + "Next" + 101 + "*";
+                            sendD = new byte[dataS];
                             sendD = thisAk.getBytes();
                             DatagramPacket AK = new DatagramPacket(sendD, sendD.length, sender, port);
                             socket.send(AK);
@@ -234,23 +236,5 @@ class serverStart implements Runnable {
         return S;
     }
 
-    private void clearD(byte[] data) {
-        for (int i = 0; i < data.length; i++) {
-            data[i] = (byte) 0;
-        }
-    }
-
-    private String myString() {
-        int count = 0;
-
-        String S = "";
-        while (receiveD[count] != (byte) 0) {
-            S = S + (char) receiveD[count];
-            count++;
-        }
-        System.out.println(S);
-        return S;
-
-    }
-
+   
 }
